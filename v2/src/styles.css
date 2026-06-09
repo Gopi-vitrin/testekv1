@@ -163,15 +163,15 @@ p {
 main {
   width: min(1480px, 100%);
   margin: 0 auto;
-  padding: 22px clamp(16px, 3vw, 32px) 28px;
+  padding: 18px clamp(16px, 3vw, 32px) 28px;
 }
 
 .page-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
-  align-items: end;
-  margin-bottom: 16px;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
 .eyebrow {
@@ -186,7 +186,7 @@ main {
 h1 {
   max-width: 780px;
   margin-top: 5px;
-  font-size: clamp(28px, 3.5vw, 46px);
+  font-size: clamp(28px, 3.2vw, 42px);
   line-height: 1.08;
   letter-spacing: 0;
   text-wrap: balance;
@@ -228,6 +228,14 @@ h1 {
   grid-template-columns: minmax(360px, 0.7fr) minmax(0, 1.4fr);
 }
 
+.advisor-grid .capture-console {
+  grid-row: span 2;
+}
+
+.advisor-grid .draft-panel {
+  grid-column: 1 / -1;
+}
+
 .admin-layout,
 .primary-stack,
 .assist-stack {
@@ -237,6 +245,7 @@ h1 {
 
 .admin-layout {
   grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  align-items: start;
 }
 
 .admin-layout .vault-admin {
@@ -762,6 +771,36 @@ dd {
 .capture-form textarea {
   resize: vertical;
   line-height: 1.5;
+}
+
+@media (min-width: 1121px) {
+  .view-advisor .page-header,
+  .view-admin .page-header {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    margin-bottom: 12px;
+  }
+
+  .view-advisor h1,
+  .view-admin h1 {
+    max-width: 660px;
+    font-size: clamp(30px, 2.7vw, 38px);
+    line-height: 1.06;
+  }
+
+  .view-advisor .page-header p,
+  .view-admin .page-header p {
+    margin-top: 6px;
+  }
+
+  .view-advisor .role-grid,
+  .view-admin .admin-layout {
+    gap: 14px;
+  }
+
+  .view-advisor .primary-stack,
+  .view-admin .primary-stack {
+    gap: 14px;
+  }
 }
 
 .capture-checks ul {

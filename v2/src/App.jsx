@@ -368,11 +368,9 @@ function AdvisorView() {
 
       <section className="role-grid advisor-grid">
         <AdvisorCaptureForm onSubmit={handleSubmit} />
-        <div className="primary-stack">
-          <AdvisorQuestionQueue />
-          <RecruitQueue />
-          <AdvisorDraftQueue textEntries={textEntries} />
-        </div>
+        <AdvisorQuestionQueue />
+        <RecruitQueue />
+        <AdvisorDraftQueue textEntries={textEntries} />
       </section>
     </>
   );
@@ -411,7 +409,7 @@ function AdvisorCaptureForm({ onSubmit }) {
         <label htmlFor="advisor-title">Title</label>
         <input id="advisor-title" value={title} onChange={(event) => setTitle(event.target.value)} />
         <label htmlFor="advisor-detail">Procedure detail</label>
-        <textarea id="advisor-detail" rows="7" value={detail} onChange={(event) => setDetail(event.target.value)} />
+        <textarea id="advisor-detail" rows="5" value={detail} onChange={(event) => setDetail(event.target.value)} />
         <button type="submit" className="primary-action" disabled={!title.trim() || !detail.trim()}>
           <Database size={17} aria-hidden="true" />
           Send to vault review
@@ -429,7 +427,7 @@ function AdvisorCaptureForm({ onSubmit }) {
 
 function AdvisorQuestionQueue() {
   return (
-    <section className="panel" aria-labelledby="advisor-question-heading">
+    <section className="panel advisor-question-panel" aria-labelledby="advisor-question-heading">
       <div className="section-heading">
         <div>
           <span className="eyebrow">New recruit questions</span>
@@ -457,7 +455,7 @@ function AdvisorQuestionQueue() {
 
 function RecruitQueue() {
   return (
-    <section className="panel" aria-labelledby="recruit-queue-heading">
+    <section className="panel recruit-panel" aria-labelledby="recruit-queue-heading">
       <div className="section-heading">
         <div>
           <span className="eyebrow">Recruit support</span>
@@ -485,7 +483,7 @@ function RecruitQueue() {
 
 function AdvisorDraftQueue({ textEntries }) {
   return (
-    <section className="panel" aria-labelledby="draft-queue-heading">
+    <section className="panel draft-panel" aria-labelledby="draft-queue-heading">
       <div className="section-heading">
         <div>
           <span className="eyebrow">Vault draft queue</span>
@@ -686,7 +684,7 @@ export default function App() {
     <div className="app-shell">
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <ShellHeader activeView={activeView} setActiveView={setActiveView} />
-      <main id="main-content" tabIndex="-1" aria-label={`${activeLabel} workspace`}>
+      <main id="main-content" className={`view-${activeView}`} tabIndex="-1" aria-label={`${activeLabel} workspace`}>
         {activeView === 'technician' && <TechnicianView />}
         {activeView === 'advisor' && <AdvisorView />}
         {activeView === 'admin' && <AdminView />}
