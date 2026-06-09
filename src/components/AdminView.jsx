@@ -38,8 +38,9 @@ function buildLeaderboard(vault) {
   return Object.values(map).sort((a, b) => b.citations - a.citations);
 }
 
-const BAR_COLORS = [colors.navy, colors.navyMid, colors.steel, '#5C7A99', '#4A6680'];
-const BAR_TEXT_COLORS = [colors.navy, colors.navyMid, colors.steel, '#4A6075', '#3D5265'];
+// All BAR_COLORS must pass 4.5:1 with white text (WCAG AA); BAR_TEXT_COLORS must pass 4.5:1 on white bg
+const BAR_COLORS     = [colors.navy, colors.navyMid, '#177040', '#7A3D00', '#7A1515'];
+const BAR_TEXT_COLORS = [colors.navy, colors.navyMid, '#177040', '#7A3D00', '#7A1515'];
 
 export default function AdminView({ projects, pendingApprovals, knowledgeVault, onSelectProject, onApprove }) {
   const leaderboard = buildLeaderboard(knowledgeVault);
@@ -70,7 +71,7 @@ export default function AdminView({ projects, pendingApprovals, knowledgeVault, 
             <div style={{ fontSize: 26, fontWeight: 800, color: kpi.fill ? colors.white : kpi.alert ? kpi.accent : colors.textPrimary, marginBottom: 4, fontFamily: fonts.mono, lineHeight: 1 }}>
               {kpi.value}
             </div>
-            <div style={{ fontSize: 11, color: kpi.fill ? 'rgba(255,255,255,0.8)' : colors.textMuted, fontWeight: 600 }}>{kpi.label}</div>
+            <div style={{ fontSize: 12, color: kpi.fill ? 'rgba(255,255,255,0.85)' : colors.textMuted, fontWeight: 600 }}>{kpi.label}</div>
           </div>
         ))}
       </div>
@@ -82,7 +83,7 @@ export default function AdminView({ projects, pendingApprovals, knowledgeVault, 
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: colors.textPrimary, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             Fleet Status
-            <span style={{ fontFamily: fonts.mono, fontSize: 10, color: colors.textMuted, fontWeight: 400 }}>
+            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, fontWeight: 400 }}>
               {projects.length} active programs
             </span>
           </div>
@@ -171,7 +172,7 @@ export default function AdminView({ projects, pendingApprovals, knowledgeVault, 
                           width: 20, height: 20, borderRadius: '50%',
                           background: colors.navyMid,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 8, fontWeight: 700, color: colors.white,
+                          fontSize: 10, fontWeight: 700, color: colors.white,
                         }}>
                           {advisor.name.split(' ').map(p => p[0]).join('')}
                         </div>
@@ -332,17 +333,17 @@ export default function AdminView({ projects, pendingApprovals, knowledgeVault, 
                       width: 24, height: 24, borderRadius: '50%',
                       background: barColor,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 8, fontWeight: 700, color: colors.white, flexShrink: 0,
+                      fontSize: 10, fontWeight: 700, color: colors.white, flexShrink: 0,
                     }}>
                       {c.name.split(' ').map(p => p[0]).join('')}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: colors.textPrimary }}>{c.name}</div>
-                      {tech && <div style={{ fontSize: 9, color: colors.textMuted, fontFamily: fonts.mono }}>{tech.title} · {tech.yearsExp}yr</div>}
+                      {tech && <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: fonts.mono }}>{tech.title} · {tech.yearsExp}yr</div>}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontFamily: fonts.mono, fontSize: 13, fontWeight: 800, color: textColor }}>{c.citations}</div>
-                      <div style={{ fontSize: 9, color: colors.textMuted }}>{c.count} technique{c.count !== 1 ? 's' : ''}</div>
+                      <div style={{ fontSize: 11, color: colors.textMuted }}>{c.count} technique{c.count !== 1 ? 's' : ''}</div>
                     </div>
                   </div>
                   <div style={{ height: 5, background: colors.border, borderRadius: 2.5, overflow: 'hidden' }}>
@@ -372,7 +373,7 @@ export default function AdminView({ projects, pendingApprovals, knowledgeVault, 
                     <div style={{ display: 'flex', gap: 6 }}>
                       <span style={{ fontFamily: fonts.mono, fontSize: 10, fontWeight: 700, color: colors.textPrimary }}>{count}</span>
                       {verified > 0 && (
-                        <span style={{ fontSize: 9, color: '#177040', background: colors.greenLight, padding: '1px 5px', borderRadius: 3, fontFamily: fonts.mono }}>
+                        <span style={{ fontSize: 11, color: '#177040', background: colors.greenLight, padding: '1px 5px', borderRadius: 3, fontFamily: fonts.mono }}>
                           {verified} verified
                         </span>
                       )}

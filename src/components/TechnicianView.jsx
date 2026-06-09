@@ -283,7 +283,7 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
                 border: '1px solid #C5D6F0',
                 borderRadius: 6, padding: '9px 10px',
               }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.1, marginBottom: 6, fontFamily: fonts.mono, textTransform: 'uppercase' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.1, marginBottom: 6, fontFamily: fonts.mono, textTransform: 'uppercase' }}>
                   Assigned Advisor
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
@@ -341,7 +341,7 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F8F9FC'; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'none'; }}
               >
-                <div style={{ fontFamily: fonts.mono, fontSize: 9, fontWeight: 700, color: isActive ? colors.navy : colors.textMuted, letterSpacing: 0.5, marginBottom: 2 }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: 11, fontWeight: 700, color: isActive ? colors.navy : colors.textMuted, letterSpacing: 0.5, marginBottom: 2 }}>
                   {p.id}
                 </div>
                 <div style={{ fontSize: 11, fontWeight: isActive ? 700 : 400, color: isActive ? colors.textPrimary : colors.textMuted, lineHeight: 1.3, marginBottom: 5 }}>
@@ -351,10 +351,10 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
                   <div style={{ height: '100%', width: `${pStats.pct}%`, background: pBlocked ? colors.red : pAwaiting ? colors.amber : colors.navy, borderRadius: 2 }} />
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
-                  <span style={{ fontFamily: fonts.mono, fontSize: 9, color: colors.textMuted }}>{pStats.pct}%</span>
-                  {pBlocked && <span style={{ fontSize: 9, fontWeight: 700, color: colors.red, background: colors.redLight, padding: '1px 5px', borderRadius: 3 }}>BLOCKED</span>}
-                  {!pBlocked && pAwaiting && <span style={{ fontSize: 9, fontWeight: 700, color: '#7A3D00', background: colors.amberLight, padding: '1px 5px', borderRadius: 3 }}>SIGN-OFF</span>}
-                  {!pBlocked && !pAwaiting && <span style={{ fontSize: 9, fontWeight: 700, color: '#177040', background: colors.greenLight, padding: '1px 5px', borderRadius: 3 }}>ON TRACK</span>}
+                  <span style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>{pStats.pct}%</span>
+                  {pBlocked && <span style={{ fontSize: 11, fontWeight: 700, color: colors.red, background: colors.redLight, padding: '1px 5px', borderRadius: 3 }}>BLOCKED</span>}
+                  {!pBlocked && pAwaiting && <span style={{ fontSize: 11, fontWeight: 700, color: '#7A3D00', background: colors.amberLight, padding: '1px 5px', borderRadius: 3 }}>SIGN-OFF</span>}
+                  {!pBlocked && !pAwaiting && <span style={{ fontSize: 11, fontWeight: 700, color: '#177040', background: colors.greenLight, padding: '1px 5px', borderRadius: 3 }}>ON TRACK</span>}
                 </div>
               </button>
             );
@@ -427,8 +427,8 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
                     )}
                   </div>
                   <div style={{
-                    fontSize: 8, fontFamily: fonts.mono, letterSpacing: 0.3,
-                    color: isDone ? colors.green : isCurrent ? colors.navy : colors.border,
+                    fontSize: 10, fontFamily: fonts.mono, letterSpacing: 0.3,
+                    color: isDone ? colors.green : isCurrent ? colors.navy : colors.textMuted,
                     fontWeight: isCurrent ? 700 : 400,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
@@ -483,7 +483,7 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
         {/* Current step */}
         {currentInfo ? (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.2, fontFamily: fonts.mono, marginBottom: 10, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.2, fontFamily: fonts.mono, marginBottom: 10, textTransform: 'uppercase' }}>
               Current Step
             </div>
             <StepCard
@@ -512,7 +512,7 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
             background: colors.white, border: `1px solid ${colors.border}`,
             borderRadius: 8, padding: '14px 20px',
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.2, fontFamily: fonts.mono, marginBottom: 10, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, letterSpacing: 1.2, fontFamily: fonts.mono, marginBottom: 10, textTransform: 'uppercase' }}>
               Coming Up
             </div>
             {nextSteps.map(({ step, phase }, i) => (
@@ -521,15 +521,14 @@ export default function TechnicianView({ projects, activeProjectId, knowledgeVau
                 paddingBottom: i < nextSteps.length - 1 ? 10 : 0,
                 marginBottom: i < nextSteps.length - 1 ? 10 : 0,
                 borderBottom: i < nextSteps.length - 1 ? `1px solid ${colors.border}` : 'none',
-                opacity: 0.7,
               }}>
-                <div style={{ fontFamily: fonts.mono, fontSize: 10, fontWeight: 700, color: colors.textMuted, width: 30, flexShrink: 0, paddingTop: 1 }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: 11, fontWeight: 700, color: colors.textMuted, width: 32, flexShrink: 0, paddingTop: 1 }}>
                   #{step.id}
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.4 }}>{step.name}</div>
                   {step.isPhaseGate && (
-                    <span style={{ fontSize: 9, fontFamily: fonts.mono, fontWeight: 700, color: '#7A3D00', background: colors.amberLight, padding: '1px 5px', borderRadius: 3, marginTop: 3, display: 'inline-block' }}>PHASE GATE</span>
+                    <span style={{ fontSize: 11, fontFamily: fonts.mono, fontWeight: 700, color: '#7A3D00', background: colors.amberLight, padding: '1px 5px', borderRadius: 3, marginTop: 3, display: 'inline-block' }}>PHASE GATE</span>
                   )}
                 </div>
               </div>

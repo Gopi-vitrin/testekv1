@@ -139,7 +139,7 @@ export default function AdvisorView({ projects, knowledgeVault, onAddVaultEntry 
                 background: colors.navyLight, borderRadius: 5, padding: '7px 10px', textAlign: 'center',
               }}>
                 <div style={{ fontSize: 18, fontWeight: 800, color: colors.navy, fontFamily: fonts.mono }}>{stat.value}</div>
-                <div style={{ fontSize: 9, color: colors.textMuted, letterSpacing: 0.6 }}>{stat.label}</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: 0.4 }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -179,7 +179,7 @@ export default function AdvisorView({ projects, knowledgeVault, onAddVaultEntry 
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: colors.textPrimary }}>{tech.name}</div>
-                  <div style={{ fontSize: 9, color: colors.textMuted, fontFamily: fonts.mono }}>{tech.title} · {tech.yearsExp}yr</div>
+                  <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: fonts.mono }}>{tech.title} · {tech.yearsExp}yr</div>
                 </div>
               </div>
               {statusInfo && (
@@ -417,30 +417,42 @@ export default function AdvisorView({ projects, knowledgeVault, onAddVaultEntry 
           />
 
           <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-            <input
-              value={captureStep}
-              onChange={e => setCaptureStep(e.target.value)}
-              placeholder="Step # (optional)"
-              style={{
-                width: 130, padding: '8px 10px',
-                border: `1px solid ${colors.border}`, borderRadius: 6,
-                fontSize: 12, fontFamily: fonts.sans, color: colors.textPrimary, outline: 'none',
-              }}
-              onFocus={e => e.target.style.borderColor = colors.navy}
-              onBlur={e => e.target.style.borderColor = colors.border}
-            />
-            <input
-              value={capturePhase}
-              onChange={e => setCapturePhase(e.target.value)}
-              placeholder="Phase name (optional)"
-              style={{
-                flex: 1, padding: '8px 10px',
-                border: `1px solid ${colors.border}`, borderRadius: 6,
-                fontSize: 12, fontFamily: fonts.sans, color: colors.textPrimary, outline: 'none',
-              }}
-              onFocus={e => e.target.style.borderColor = colors.navy}
-              onBlur={e => e.target.style.borderColor = colors.border}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label htmlFor="vault-step" style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, fontFamily: fonts.mono, letterSpacing: 0.4 }}>
+                Step # (optional)
+              </label>
+              <input
+                id="vault-step"
+                value={captureStep}
+                onChange={e => setCaptureStep(e.target.value)}
+                placeholder="e.g. 51"
+                style={{
+                  width: 130, padding: '8px 10px',
+                  border: `1px solid ${colors.border}`, borderRadius: 6,
+                  fontSize: 12, fontFamily: fonts.sans, color: colors.textPrimary, outline: 'none',
+                }}
+                onFocus={e => e.target.style.borderColor = colors.navy}
+                onBlur={e => e.target.style.borderColor = colors.border}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+              <label htmlFor="vault-phase" style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, fontFamily: fonts.mono, letterSpacing: 0.4 }}>
+                Phase (optional)
+              </label>
+              <input
+                id="vault-phase"
+                value={capturePhase}
+                onChange={e => setCapturePhase(e.target.value)}
+                placeholder="e.g. Mechanical Assembly"
+                style={{
+                  width: '100%', padding: '8px 10px',
+                  border: `1px solid ${colors.border}`, borderRadius: 6,
+                  fontSize: 12, fontFamily: fonts.sans, color: colors.textPrimary, outline: 'none',
+                }}
+                onFocus={e => e.target.style.borderColor = colors.navy}
+                onBlur={e => e.target.style.borderColor = colors.border}
+              />
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

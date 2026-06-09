@@ -37,7 +37,7 @@ function LiveClock() {
     return () => clearInterval(t);
   }, []);
   return (
-    <span style={{ fontFamily: fonts.mono, fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8 }}>
+    <span style={{ fontFamily: fonts.mono, fontSize: 12, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8 }}>
       {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
       <span style={{ margin: '0 6px', opacity: 0.4 }}>|</span>
       {time.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
@@ -86,7 +86,7 @@ export default function NavBar({ activeView, onViewChange }) {
           <div style={{ fontFamily: fonts.sans, color: colors.white, fontWeight: 800, fontSize: 15, letterSpacing: 1.5, lineHeight: 1 }}>
             TESTEK
           </div>
-          <div style={{ fontFamily: fonts.mono, color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, lineHeight: 1.4 }}>
+          <div style={{ fontFamily: fonts.mono, color: 'rgba(255,255,255,0.6)', fontSize: 10, letterSpacing: 2, lineHeight: 1.4 }}>
             BUILD TRACKER
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function NavBar({ activeView, onViewChange }) {
           borderRadius: 4, padding: '3px 8px',
         }}>
           <span style={{ fontSize: 8, color: '#4ade80' }}>●</span>
-          <span style={{ fontFamily: fonts.mono, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>
+          <span style={{ fontFamily: fonts.mono, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 1 }}>
             ON-PREM · CMMC 2.0
           </span>
         </div>
@@ -167,7 +167,7 @@ export default function NavBar({ activeView, onViewChange }) {
             <div style={{ fontSize: 12, color: colors.white, fontFamily: fonts.sans, lineHeight: 1.2 }}>
               {persona.name}
             </div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', fontFamily: fonts.mono, letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontFamily: fonts.mono, letterSpacing: 0.5 }}>
               {persona.sub}
             </div>
           </div>

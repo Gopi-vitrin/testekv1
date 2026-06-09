@@ -244,7 +244,7 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
         </div>
         {/* AI Suggestion panel */}
         {aiSuggestionOpen && (
-          <div className="anim-fade-in" style={{
+          <div className="anim-fade-in" aria-live="polite" aria-atomic="false" style={{
             marginTop: 12,
             padding: '12px 14px',
             background: `linear-gradient(135deg, #F0F4FA 0%, #E8EDF4 100%)`,
@@ -260,7 +260,8 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
               </span>
               <button
                 onClick={() => setAiSuggestionOpen(false)}
-                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: colors.textMuted, fontSize: 16, lineHeight: 1, padding: 0 }}
+                aria-label="Close AI suggestions"
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: colors.textMuted, fontSize: 16, lineHeight: 1, padding: '2px 4px', minWidth: 24, minHeight: 24 }}
               >×</button>
             </div>
             {aiLoading ? (
@@ -292,7 +293,7 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
                 ))}
               </ol>
             )}
-            <div style={{ fontSize: 10, color: colors.textMuted, fontFamily: fonts.mono, marginTop: 9 }}>
+            <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: fonts.mono, marginTop: 9 }}>
               ✦ AI-generated · Verify all actions per program procedures
             </div>
           </div>
@@ -480,7 +481,7 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#7A3D00' }}>Advisor Tip</span>
-              <span style={{ fontFamily: fonts.mono, fontSize: 9, color: '#7A3D00', background: colors.amberLight, padding: '1px 6px', borderRadius: 3 }}>
+              <span style={{ fontFamily: fonts.mono, fontSize: 11, color: '#7A3D00', background: colors.amberLight, padding: '1px 6px', borderRadius: 3 }}>
                 {vaultHint.citations} cite{vaultHint.citations !== 1 ? 's' : ''} · from {vaultHint.contributor}
               </span>
             </div>
@@ -516,10 +517,14 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
       })()}
 
       {/* Note input */}
+      <label htmlFor="step-note" style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, letterSpacing: 0.5, display: 'block', marginBottom: 5, textTransform: 'uppercase' }}>
+        Completion Note (optional)
+      </label>
       <textarea
+        id="step-note"
         value={note}
         onChange={e => setNote(e.target.value)}
-        placeholder="Add a completion note (optional) — e.g. torque values, measurements, observations"
+        placeholder="e.g. torque values, measurements, observations"
         rows={2}
         style={{
           width: '100%',
@@ -559,7 +564,9 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
           onMouseEnter={e => { if (!vaultThis) { e.currentTarget.style.borderColor = colors.navy; e.currentTarget.style.color = colors.navy; } }}
           onMouseLeave={e => { if (!vaultThis) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textMuted; } }}
         >
-          <span style={{ fontSize: 13 }}>🗂</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+          </svg>
           Vault This Technique
           {vaultThis && <span style={{ fontFamily: fonts.mono, fontSize: 10, marginLeft: 4, color: colors.navy }}>ON</span>}
         </button>
@@ -574,7 +581,7 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
             borderRadius: 6,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: colors.navy, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+              <label htmlFor="vault-desc" style={{ fontSize: 11, fontWeight: 700, color: colors.navy, letterSpacing: 0.5, textTransform: 'uppercase' }}>
                 Technique / Lesson Learned
               </label>
               <button
@@ -614,6 +621,7 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
               </button>
             </div>
             <textarea
+              id="vault-desc"
               value={vaultDesc}
               onChange={e => setVaultDesc(e.target.value)}
               placeholder="Describe the technique, trick, or lesson learned for this step — what would help the next technician do this better?"
@@ -637,42 +645,48 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
               onBlur={e => e.target.style.borderColor = '#C5D6F0'}
             />
             {/* Media capture options */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
               <button
+                disabled
+                aria-disabled="true"
+                title="Voice memo capture — coming soon"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   background: colors.white, border: `1px solid ${colors.border}`,
                   borderRadius: 4, padding: '4px 10px', fontSize: 11,
-                  color: colors.textMuted, cursor: 'pointer', fontFamily: fonts.sans,
-                  transition: 'border-color 0.12s',
+                  color: colors.textMuted, cursor: 'not-allowed', fontFamily: fonts.sans,
+                  opacity: 0.6,
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = colors.navy}
-                onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-                onClick={() => {}}
-                title="Attach voice memo — AI will transcribe and draft"
               >
-                🎤 Voice Memo
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                Voice Memo
+                <span style={{ fontSize: 9, fontWeight: 700, background: colors.amber, color: colors.white, padding: '1px 4px', borderRadius: 2, letterSpacing: 0.4, fontFamily: fonts.mono }}>SOON</span>
               </button>
               <button
+                disabled
+                aria-disabled="true"
+                title="Photo documentation — coming soon"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   background: colors.white, border: `1px solid ${colors.border}`,
                   borderRadius: 4, padding: '4px 10px', fontSize: 11,
-                  color: colors.textMuted, cursor: 'pointer', fontFamily: fonts.sans,
-                  transition: 'border-color 0.12s',
+                  color: colors.textMuted, cursor: 'not-allowed', fontFamily: fonts.sans,
+                  opacity: 0.6,
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = colors.navy}
-                onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
-                onClick={() => {}}
-                title="Attach photo documentation"
               >
-                📷 Photo
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                </svg>
+                Photo
+                <span style={{ fontSize: 9, fontWeight: 700, background: colors.amber, color: colors.white, padding: '1px 4px', borderRadius: 2, letterSpacing: 0.4, fontFamily: fonts.mono }}>SOON</span>
               </button>
-              <span style={{ fontSize: 10, color: colors.textMuted, alignSelf: 'center', fontStyle: 'italic' }}>
+              <span style={{ fontSize: 11, color: colors.textMuted, fontStyle: 'italic' }}>
                 AI will draft from recording
               </span>
             </div>
-            <div style={{ fontSize: 10, color: colors.textMuted, fontFamily: fonts.mono }}>
+            <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: fonts.mono }}>
               Contributor: {phase.assignedTo} · Pending engineering review before vault publication
             </div>
           </div>
@@ -774,10 +788,11 @@ export default function StepCard({ step, phase, phases, vaultHint, onComplete, o
           </div>
 
           {/* Free text detail */}
-          <label style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>
+          <label htmlFor="block-reason" style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>
             DESCRIPTION (required)
           </label>
           <textarea
+            id="block-reason"
             value={blockReason}
             onChange={e => setBlockReason(e.target.value)}
             placeholder="Describe what is blocking this step and what action is needed…"
