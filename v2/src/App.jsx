@@ -357,7 +357,7 @@ function AdvisorView() {
     <>
       <PageHeader
         eyebrow="Senior advisor workspace"
-        title="Capture expertise and unblock recruits"
+        title="Advisor workspace"
         detail="Advisor sees recruit questions, records voice or text knowledge, and reviews draft vault entries."
       >
         <div className="header-metrics">
@@ -521,7 +521,7 @@ function AdminView() {
     <>
       <PageHeader
         eyebrow="Admin control room"
-        title="Track projects, vault health, and advisor contribution"
+        title="Operations control room"
         detail="Admin sees the full system: project status, who is working where, draft quality, and advisor participation."
       >
         <div className="header-metrics">

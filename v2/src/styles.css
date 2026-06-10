@@ -783,8 +783,19 @@ dd {
   .view-advisor h1,
   .view-admin h1 {
     max-width: 660px;
-    font-size: clamp(30px, 2.7vw, 38px);
+    font-size: clamp(28px, 2.3vw, 34px);
     line-height: 1.06;
+  }
+
+  .view-advisor .metric,
+  .view-admin .metric {
+    min-width: 128px;
+    padding: 10px 12px;
+  }
+
+  .view-advisor .metric strong,
+  .view-admin .metric strong {
+    font-size: 22px;
   }
 
   .view-advisor .page-header p,
