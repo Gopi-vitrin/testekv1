@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Bot,
   CheckCircle2,
   ClipboardCheck,
   Database,
@@ -20,16 +19,18 @@ import {
 } from 'lucide-react';
 import testekLogo from './assets/testek-logo.png';
 import {
-  advisorContributions,
   advisorQuestions,
   advisorRecruits,
-  adminSignals,
   adminRiskSignals,
-  captureQualityChecks,
   intakeItems,
+  legacyTechniques,
+  conversationCaptures,
   procedure,
-  recruitHelpTopics,
+  recognitionLeaders,
+  retirementRecords,
   seniorCaptureDrafts,
+  systemHealth,
+  technicianProfiles,
   technicianGuardrails,
   technicianSteps,
   validationQueue,
@@ -39,7 +40,7 @@ import {
 
 const views = [
   { key: 'technician', label: 'Technician', icon: ListChecks },
-  { key: 'advisor', label: 'Advisor', icon: UserCheck },
+  { key: 'advisor', label: 'Senior Tech', icon: UserCheck },
   { key: 'admin', label: 'Admin', icon: Users },
 ];
 
@@ -72,8 +73,8 @@ function ShellHeader({ activeView, setActiveView }) {
       <div className="brand-lockup">
         <img src={testekLogo} alt="Testek Solutions" />
         <div>
-          <strong>Knowledge Vault</strong>
-          <span>Role-based procedure execution</span>
+          <strong>Legacy Platform</strong>
+          <span>Build tracker</span>
         </div>
       </div>
       <ModeSwitch activeView={activeView} onChange={setActiveView} />
@@ -87,7 +88,7 @@ function PageHeader({ eyebrow, title, detail, children }) {
       <div>
         <span className="eyebrow">{eyebrow}</span>
         <h1 id="page-heading">{title}</h1>
-        <p>{detail}</p>
+        {detail && <p>{detail}</p>}
       </div>
       {children}
     </section>
@@ -104,19 +105,193 @@ function Metric({ label, value, detail, tone = 'neutral' }) {
   );
 }
 
-function TechnicianView() {
-  const activeStep = technicianSteps.find((step) => step.status === 'active');
-  const nextStep = technicianSteps.find((step) => step.status === 'blocked');
+function ProfileButton({ name, onOpen }) {
+  if (!name) return null;
+  return (
+    <button type="button" className="profile-link" onClick={() => onOpen?.(name)}>
+      {name}
+    </button>
+  );
+}
+
+function ProfileModal({ profile, onClose }) {
+  if (!profile) return null;
+  const stats = [
+    ['Citations', profile.totalCitations ?? 0],
+    ['Builds shaped', profile.projectsContributed],
+    ['Techs trained', profile.techniciansTrained ?? 0],
+    ['Named methods', profile.signatureMethods?.length ?? 0],
+  ];
+
+  return (
+    <div className="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="profile-title" onClick={onClose}>
+      <section className="profile-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="profile-modal-header">
+          <div>
+            <span className="eyebrow">Career body of work</span>
+            <h2 id="profile-title">{profile.name}</h2>
+            <p>{profile.role} / {profile.yearsAtTestek || profile.yearsExperience} years at Testek</p>
+          </div>
+          <button type="button" aria-label="Close profile" onClick={onClose}>Close</button>
+        </div>
+        {profile.legacyLine && <p className="profile-legacy">{profile.legacyLine}</p>}
+        <div className="profile-stats">
+          {stats.map(([label, value]) => (
+            <div key={label}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+        {profile.buildsShaped?.length > 0 && (
+          <div className="legacy-section">
+            <h3>Builds shaped</h3>
+            <ul>{profile.buildsShaped.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        )}
+        {profile.signatureMethods?.length > 0 && (
+          <div className="signature-methods">
+            <h3>Techniques authored</h3>
+            <ul>
+              {profile.signatureMethods.map((method) => <li key={method}>{method}</li>)}
+            </ul>
+          </div>
+        )}
+        {profile.menteeLinks?.length > 0 && (
+          <div className="legacy-section">
+            <h3>People trained</h3>
+            <ul>{profile.menteeLinks.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function KnowledgeLayer({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile, compact = false }) {
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [questionText, setQuestionText] = useState('');
+  const notes = step.techniqueNotes || [];
+  const questions = step.questions || [];
+  const expert = step.completedBy || notes[0]?.author;
+
+  function submitNote() {
+    if (!noteText.trim()) return;
+    onAddNote?.(step.id, noteText.trim());
+    setNoteText('');
+    setNoteOpen(false);
+  }
+
+  function submitQuestion() {
+    if (!questionText.trim()) return;
+    onAskExpert?.(step.id, questionText.trim());
+    setQuestionText('');
+    setAskOpen(false);
+  }
+
+  if (compact && notes.length === 0 && questions.length === 0) return null;
+
+  return (
+    <div className={`knowledge-layer ${compact ? 'is-compact' : ''}`}>
+      {step.completedBy && (
+        <p className="built-by">
+          Built by <ProfileButton name={step.completedBy} onOpen={onOpenProfile} />
+          {step.completedAt && <span> / {step.completedAt}</span>}
+        </p>
+      )}
+
+      {notes.map((note) => (
+        <article key={note.id} className={`technique-note ${note.endorsed ? 'is-verified' : ''} ${note.named ? 'is-named' : ''}`}>
+          <div>
+            <span className="eyebrow">{note.named ? 'Named technique' : note.endorsed ? 'Credited senior method' : 'Waiting for senior approval'}</span>
+            {note.name && <h3>{note.name}</h3>}
+            <p>{note.text}</p>
+          </div>
+          <div className="note-meta">
+            <span>by <ProfileButton name={note.author} onOpen={onOpenProfile} /></span>
+            {note.sourceQuestion && <span>Captured from conversation</span>}
+            {note.endorsed && <span>Approved by {note.endorsedBy}</span>}
+            {note.citations ? (
+              <span>{note.citations.buildCount} builds / {note.citations.customers.length} customers / {note.citations.technicians.length} technicians</span>
+            ) : (note.appliedAcrossBuilds || 0) > 0 && <span>{note.appliedAcrossBuilds} builds</span>}
+          </div>
+        </article>
+      ))}
+
+      {questions.map((question) => (
+        <article key={question.id} className="qa-thread">
+          <p><strong>Q:</strong> <ProfileButton name={question.askedBy} onOpen={onOpenProfile} /> asked: {question.text}</p>
+          {question.answer ? (
+            <>
+              <p><strong>A:</strong> <ProfileButton name={question.answer.author} onOpen={onOpenProfile} /> answered: {question.answer.text}</p>
+              {!question.savedAsNote && (
+                <button
+                  type="button"
+                  className="save-answer-note"
+                  onClick={() => onSaveAnswerNote?.(step.id, question.id)}
+                >
+                  Save this answer as a credited technique note
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="pending-answer">Routed to {expert || 'expert'} - awaiting response</p>
+          )}
+        </article>
+      ))}
+
+      {!compact && (
+        <div className="knowledge-actions">
+          <button type="button" onClick={() => setNoteOpen((open) => !open)}>Add to body of work</button>
+          {expert && <button type="button" onClick={() => setAskOpen((open) => !open)}>Ask senior tech</button>}
+        </div>
+      )}
+
+      {noteOpen && (
+        <div className="quick-entry">
+          <label className="sr-only" htmlFor={`note-${step.id}`}>Add technique note</label>
+          <textarea
+            id={`note-${step.id}`}
+            value={noteText}
+            onChange={(event) => setNoteText(event.target.value)}
+            placeholder="Capture what happened on the floor. A senior tech approves it before it joins their body of work."
+            rows="2"
+          />
+          <button type="button" onClick={submitNote} disabled={!noteText.trim()}>Save</button>
+        </div>
+      )}
+
+      {askOpen && (
+        <div className="quick-entry">
+          <label className="sr-only" htmlFor={`ask-${step.id}`}>Ask senior tech</label>
+          <textarea
+            id={`ask-${step.id}`}
+            value={questionText}
+            onChange={(event) => setQuestionText(event.target.value)}
+            placeholder={`Ask ${expert} about this step`}
+            rows="2"
+          />
+          <button type="button" onClick={submitQuestion} disabled={!questionText.trim()}>Ask</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
+  const activeStep = steps.find((step) => step.status === 'active');
+  const nextStep = steps.find((step) => step.status === 'blocked');
 
   return (
     <>
       <PageHeader
         eyebrow={`${procedure.recruit} / ${procedure.recruitExperience} experience`}
-        title="Follow the procedure path"
-        detail="This view keeps the new recruit focused on what to do now, what unlocks next, and who to ask for help."
+        title="Do the next safe step"
       >
         <div className="contact-card">
-          <span>Assigned advisor</span>
+          <span>Assigned senior tech</span>
           <strong>{procedure.assignedMentor}</strong>
           <small>Suggested: {procedure.suggestedMentor}</small>
         </div>
@@ -124,19 +299,95 @@ function TechnicianView() {
 
       <section className="role-grid technician-grid">
         <div className="primary-stack">
-          <CurrentStepCard step={activeStep} />
-          <ProcedurePath />
+          <CurrentStepCard step={activeStep} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
+          <ProcedurePath steps={steps} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
         </div>
         <aside className="assist-stack">
-          <RecruitCopilot />
-          <NeedHelpCard blockedStep={nextStep} />
+          <ConversationCaptureCard step={activeStep} />
+          <StandingOnShoulders onOpenProfile={onOpenProfile} />
         </aside>
       </section>
     </>
   );
 }
 
-function CurrentStepCard({ step }) {
+function ConversationCaptureCard({ step }) {
+  const [mode, setMode] = useState('Text');
+  const [seniorTech, setSeniorTech] = useState('J. Martinez');
+  const [summary, setSummary] = useState('J. Martinez said to check bypass valve position before replacing the flow sensor if the return line warms first.');
+  const [sent, setSent] = useState(false);
+
+  function submitCapture(event) {
+    event.preventDefault();
+    if (!summary.trim()) return;
+    setSent(true);
+  }
+
+  return (
+    <section className="panel conversation-capture-card" aria-labelledby="conversation-capture-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Conversation capture</span>
+          <h2 id="conversation-capture-heading">Credit the senior tech</h2>
+        </div>
+        <Mic size={20} aria-hidden="true" />
+      </div>
+      <form className="capture-form" onSubmit={submitCapture}>
+        <div className="capture-toggle" role="group" aria-label="Capture format">
+          {['Text', 'Voice'].map((item) => (
+            <button key={item} type="button" className={mode === item ? 'active' : ''} onClick={() => setMode(item)}>
+              {item === 'Voice' ? <Mic size={16} aria-hidden="true" /> : <FileText size={16} aria-hidden="true" />}
+              {item}
+            </button>
+          ))}
+        </div>
+        <label htmlFor="capture-senior">Senior tech</label>
+        <input id="capture-senior" value={seniorTech} onChange={(event) => setSeniorTech(event.target.value)} />
+        <label htmlFor="capture-summary">What they told you</label>
+        {mode === 'Voice' ? (
+          <div className="voice-reply-box">
+            <Mic size={18} aria-hidden="true" />
+            <span>Voice summary staged for {seniorTech} approval</span>
+          </div>
+        ) : (
+          <textarea id="capture-summary" rows="4" value={summary} onChange={(event) => setSummary(event.target.value)} />
+        )}
+        <button type="submit" className="primary-action" disabled={mode === 'Text' && !summary.trim()}>
+          <Send size={16} aria-hidden="true" />
+          Send for senior approval
+        </button>
+      </form>
+      {sent && <p className="sent-state">Waiting for {seniorTech} approval / Step {step.id}</p>}
+    </section>
+  );
+}
+
+function StandingOnShoulders({ onOpenProfile }) {
+  return (
+    <section className="panel standing-card" aria-labelledby="standing-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Legacy in this step</span>
+          <h2 id="standing-heading">Standing on Thompson's method</h2>
+        </div>
+        <UserCheck size={20} aria-hidden="true" />
+      </div>
+      <p>This pressure step uses the <strong>Thompson Pressure-Ramp Method</strong>.</p>
+      <div className="mini-stats">
+        <span>14 builds</span>
+        <span>3 customers</span>
+        <span>9 technicians</span>
+      </div>
+      <button type="button" className="open-reply" onClick={() => onOpenProfile?.('R. Thompson')}>
+        View R. Thompson's body of work
+      </button>
+    </section>
+  );
+}
+
+function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
+  const [evidenceSent, setEvidenceSent] = useState(false);
+
   return (
     <section className="panel current-step" aria-labelledby="current-step-heading">
       <div className="section-heading">
@@ -169,17 +420,25 @@ function CurrentStepCard({ step }) {
           ))}
         </div>
       </details>
-      <button type="button" className="primary-action">
+      <KnowledgeLayer
+        step={step}
+        onAddNote={onAddNote}
+        onAskExpert={onAskExpert}
+        onSaveAnswerNote={onSaveAnswerNote}
+        onOpenProfile={onOpenProfile}
+      />
+      <button type="button" className="primary-action" onClick={() => setEvidenceSent(true)}>
         <CheckCircle2 size={18} aria-hidden="true" />
-        Submit evidence for review
+        {evidenceSent ? 'Evidence sent for review' : 'Submit evidence for review'}
       </button>
+      {evidenceSent && <p className="sent-state" role="status">Sent to QA witness and senior tech.</p>}
     </section>
   );
 }
 
-function ProcedurePath() {
+function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const [selectedStepId, setSelectedStepId] = useState(procedure.currentStep);
-  const selectedStep = technicianSteps.find((step) => step.id === selectedStepId) || technicianSteps[0];
+  const selectedStep = steps.find((step) => step.id === selectedStepId) || steps[0];
 
   return (
     <section className="panel" aria-labelledby="path-heading">
@@ -191,7 +450,7 @@ function ProcedurePath() {
         <span className="step-count">Step {procedure.currentStep} of {procedure.totalSteps}</span>
       </div>
       <div className="path-list" aria-label="Procedure workflow steps">
-        {technicianSteps.map((step) => (
+        {steps.map((step) => (
           <button
             key={step.id}
             type="button"
@@ -205,7 +464,10 @@ function ProcedurePath() {
             </div>
             <div>
               <h3>{step.title}</h3>
-              <p>{step.workstream} / {step.duration}</p>
+              <p>
+                {step.workstream} / {step.duration}
+                {step.completedBy ? ` / built by ${step.completedBy}` : ''}
+              </p>
             </div>
             <StatusPill tone={step.status === 'active' ? 'blue' : step.status === 'blocked' ? 'red' : step.status === 'complete' ? 'green' : 'neutral'}>
               {step.status}
@@ -213,12 +475,18 @@ function ProcedurePath() {
           </button>
         ))}
       </div>
-      <StepDetailPanel step={selectedStep} />
+      <StepDetailPanel
+        step={selectedStep}
+        onAddNote={onAddNote}
+        onAskExpert={onAskExpert}
+        onSaveAnswerNote={onSaveAnswerNote}
+        onOpenProfile={onOpenProfile}
+      />
     </section>
   );
 }
 
-function StepDetailPanel({ step }) {
+function StepDetailPanel({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   return (
     <section id="selected-step-detail" className={`step-detail status-${step.status}`} aria-labelledby="selected-step-heading">
       <div className="section-heading compact-heading">
@@ -231,7 +499,12 @@ function StepDetailPanel({ step }) {
         </StatusPill>
       </div>
       {step.guidance && <p className="step-detail-note">{step.guidance}</p>}
-      {step.blocker && <p className="step-detail-note blocker-detail">{step.blocker}</p>}
+      {step.blocker && (
+        <p className="step-detail-note blocker-detail">
+          {step.identifiedBy ? `${step.identifiedBy} identified an issue: ` : ''}
+          {step.blocker}
+        </p>
+      )}
       <div className="step-detail-grid">
         <div>
           <strong>Evidence</strong>
@@ -246,12 +519,54 @@ function StepDetailPanel({ step }) {
           </ul>
         </div>
         <div>
-          <strong>Vault references</strong>
+          <strong>Legacy references</strong>
           <ul>
             {step.vaultRefs.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </div>
       </div>
+    </section>
+  );
+}
+
+function AskSeniorTechCard({ step, onAskExpert }) {
+  const [question, setQuestion] = useState('Can I continue if the pressure chart is stable but the return line is warming?');
+  const [sent, setSent] = useState(false);
+
+  function submitQuestion(event) {
+    event.preventDefault();
+    if (!question.trim()) return;
+    onAskExpert?.(step.id, question.trim());
+    setSent(true);
+    setQuestion('');
+  }
+
+  return (
+    <section className="panel ask-senior-card" aria-labelledby="ask-senior-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Step {step.id}</span>
+          <h2 id="ask-senior-heading">Ask senior tech</h2>
+        </div>
+        <UserCheck size={20} aria-hidden="true" />
+      </div>
+      <form className="senior-ask-form" onSubmit={submitQuestion}>
+        <label htmlFor="senior-tech-question" className="sr-only">Question for senior tech</label>
+        <textarea
+          id="senior-tech-question"
+          rows="3"
+          value={question}
+          onChange={(event) => {
+            setQuestion(event.target.value);
+            setSent(false);
+          }}
+        />
+        <button type="submit" disabled={!question.trim()}>
+          <Send size={16} aria-hidden="true" />
+          Send
+        </button>
+      </form>
+      {sent && <p className="sent-state">Sent to {procedure.assignedMentor}</p>}
     </section>
   );
 }
@@ -288,7 +603,6 @@ function RecruitCopilot() {
       <div className="answer-box">
         <strong>{selected.question}</strong>
         <p>{selected.answer}</p>
-        <small>Copilot uses released procedure, current step state, and validated vault notes only.</small>
       </div>
       <div className="prompt-list" aria-label="Common copilot questions">
         {recruitHelpTopics.map((topic) => (
@@ -313,6 +627,35 @@ function RecruitCopilot() {
   );
 }
 
+function SimilarResolvedBlockers() {
+  return (
+    <section className="panel similar-panel" aria-labelledby="similar-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Past fixes</span>
+          <h2 id="similar-heading">Similar resolved blockers</h2>
+        </div>
+        <Search size={18} aria-hidden="true" />
+      </div>
+      <div className="similar-list">
+        {similarResolvedBlockers.map((item) => (
+          <article key={item.id}>
+            <div>
+              <span className="eyebrow">{item.id} / {item.project}</span>
+              <h3>{item.title}</h3>
+              <p>{item.resolution}</p>
+            </div>
+            <div className="mini-stats">
+              <span>{item.owner}</span>
+              <span>{item.reused} reuses</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function NeedHelpCard({ blockedStep }) {
   return (
     <section className="panel help-card" aria-labelledby="help-heading">
@@ -324,7 +667,7 @@ function NeedHelpCard({ blockedStep }) {
         <HelpCircle size={20} aria-hidden="true" />
       </div>
       <dl className="contact-list">
-        <div><dt>Advisor</dt><dd>{procedure.assignedMentor}</dd></div>
+        <div><dt>Senior tech</dt><dd>{procedure.assignedMentor}</dd></div>
         <div><dt>Suggested mentor</dt><dd>{procedure.suggestedMentor}</dd></div>
         <div><dt>Next notification</dt><dd>{procedure.nextNotify}</dd></div>
       </dl>
@@ -338,7 +681,7 @@ function NeedHelpCard({ blockedStep }) {
   );
 }
 
-function AdvisorView() {
+function AdvisorView({ steps, onEndorseNote, onAnswerQuestion }) {
   const [textEntries, setTextEntries] = useState([]);
 
   function handleSubmit(entry) {
@@ -348,6 +691,7 @@ function AdvisorView() {
         title: entry.title,
         type: entry.mode,
         detail: entry.detail,
+        visibility: entry.visibility,
       },
       ...current,
     ]);
@@ -356,35 +700,112 @@ function AdvisorView() {
   return (
     <>
       <PageHeader
-        eyebrow="Senior advisor workspace"
-        title="Advisor workspace"
-        detail="Advisor sees recruit questions, records voice or text knowledge, and reviews draft vault entries."
+        eyebrow="Senior Tech"
+        title="Build your body of work"
       >
         <div className="header-metrics">
           <Metric value="3" label="Assigned recruits" />
-          <Metric value={2 + textEntries.length} label="Drafts ready" tone="blue" />
+          <Metric value={2 + textEntries.length} label="Legacy items ready" tone="blue" />
         </div>
       </PageHeader>
 
       <section className="role-grid advisor-grid">
         <AdvisorCaptureForm onSubmit={handleSubmit} />
-        <AdvisorQuestionQueue />
+        <LegacyApprovalInbox />
         <RecruitQueue />
-        <AdvisorDraftQueue textEntries={textEntries} />
       </section>
     </>
   );
 }
 
+function AdvisorKnowledgeReview({ steps, onEndorseNote, onAnswerQuestion }) {
+  const [answeringId, setAnsweringId] = useState(null);
+  const [answerText, setAnswerText] = useState('');
+  const pendingQuestions = steps.flatMap((step) =>
+    (step.questions || [])
+      .filter((question) => !question.answer)
+      .map((question) => ({ step, question }))
+  );
+  const unendorsedNotes = steps.flatMap((step) =>
+    (step.techniqueNotes || [])
+      .filter((note) => !note.endorsed)
+      .map((note) => ({ step, note }))
+  );
+
+  function submitAnswer(stepId, questionId) {
+    if (!answerText.trim()) return;
+    onAnswerQuestion(stepId, questionId, answerText.trim());
+    setAnsweringId(null);
+    setAnswerText('');
+  }
+
+  return (
+    <section className="panel knowledge-review-panel" aria-labelledby="knowledge-review-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Legacy loop</span>
+          <h2 id="knowledge-review-heading">Approve into body of work</h2>
+        </div>
+      </div>
+      <div className="review-list">
+        {pendingQuestions.map(({ step, question }) => (
+          <article key={question.id}>
+            <div>
+              <span className="eyebrow">Step {step.id} / Asked by {question.askedBy}</span>
+              <h3>{question.text}</h3>
+              {answeringId === question.id ? (
+                <div className="quick-entry embedded">
+                  <textarea
+                    value={answerText}
+                    onChange={(event) => setAnswerText(event.target.value)}
+                    placeholder="Answer as the senior tech. If reused, it adds to your body of work."
+                    rows="2"
+                  />
+                  <button type="button" onClick={() => submitAnswer(step.id, question.id)} disabled={!answerText.trim()}>
+                    Add to body of work
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            {answeringId === question.id ? null : (
+              <button type="button" onClick={() => setAnsweringId(question.id)}>Answer</button>
+            )}
+          </article>
+        ))}
+        {unendorsedNotes.map(({ step, note }) => (
+          <article key={note.id}>
+            <div>
+              <span className="eyebrow">Step {step.id} / {note.author}</span>
+              <h3>{note.text}</h3>
+            </div>
+              <button type="button" onClick={() => onEndorseNote(step.id, note.id)}>Approve</button>
+          </article>
+        ))}
+        {pendingQuestions.length === 0 && unendorsedNotes.length === 0 && (
+          <p className="empty-state">No pending notes waiting for senior tech approval.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function AdvisorCaptureForm({ onSubmit }) {
   const [mode, setMode] = useState('Voice note');
+  const [linkedStep, setLinkedStep] = useState('TSK-PROC-047 / Step 24');
   const [title, setTitle] = useState('Pressure decay test acceptance cue');
   const [detail, setDetail] = useState('If the return line warms before pressure stabilizes, verify bypass valve position before replacing the transducer.');
+  const [statusMessage, setStatusMessage] = useState('');
 
-  function handleSubmit(event) {
+  function submitEntry(event, visibility = 'review') {
     event.preventDefault();
     if (!title.trim() || !detail.trim()) return;
-    onSubmit({ mode, title: title.trim(), detail: detail.trim() });
+    onSubmit({
+      mode,
+      title: title.trim(),
+      detail: `${linkedStep.trim() || 'Unlinked'} - ${detail.trim()}`,
+      visibility,
+    });
+    setStatusMessage(visibility === 'private' ? 'Private note kept in your workspace.' : 'Sent for approval.');
     setTitle('');
     setDetail('');
   }
@@ -393,8 +814,8 @@ function AdvisorCaptureForm({ onSubmit }) {
     <section className="panel capture-console" aria-labelledby="capture-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Knowledge capture</span>
-          <h2 id="capture-heading">Add to vault review</h2>
+          <span className="eyebrow">Body of work</span>
+          <h2 id="capture-heading">Add to your legacy</h2>
         </div>
       </div>
       <div className="capture-toggle" role="group" aria-label="Capture mode">
@@ -405,47 +826,93 @@ function AdvisorCaptureForm({ onSubmit }) {
           </button>
         ))}
       </div>
-      <form className="capture-form" onSubmit={handleSubmit}>
-        <label htmlFor="advisor-title">Title</label>
+      <form className="capture-form" onSubmit={(event) => submitEntry(event, 'review')}>
+        <label htmlFor="advisor-title">Subject</label>
         <input id="advisor-title" value={title} onChange={(event) => setTitle(event.target.value)} />
-        <label htmlFor="advisor-detail">Procedure detail</label>
-        <textarea id="advisor-detail" rows="5" value={detail} onChange={(event) => setDetail(event.target.value)} />
-        <button type="submit" className="primary-action" disabled={!title.trim() || !detail.trim()}>
-          <Database size={17} aria-hidden="true" />
-          Send to vault review
-        </button>
+        <label htmlFor="advisor-step">Step / module</label>
+        <input id="advisor-step" value={linkedStep} onChange={(event) => setLinkedStep(event.target.value)} />
+        <label htmlFor="advisor-detail">Note</label>
+        <textarea id="advisor-detail" rows="4" value={detail} onChange={(event) => setDetail(event.target.value)} />
+        <div className="capture-actions">
+          <button type="button" onClick={(event) => submitEntry(event, 'private')} disabled={!title.trim() || !detail.trim()}>
+            Keep private
+          </button>
+          <button type="submit" className="primary-action" disabled={!title.trim() || !detail.trim()}>
+            <Database size={17} aria-hidden="true" />
+            Submit for approval
+          </button>
+        </div>
       </form>
-      <details className="inline-disclosure capture-checks">
-        <summary>What makes a useful vault entry</summary>
-        <ul>
-          {captureQualityChecks.map((item) => <li key={item}>{item}</li>)}
-        </ul>
-      </details>
+      {statusMessage && <p className="sent-state" role="status">{statusMessage}</p>}
     </section>
   );
 }
 
-function AdvisorQuestionQueue() {
+function LegacyApprovalInbox() {
+  const [approved, setApproved] = useState(() =>
+    Object.fromEntries(conversationCaptures.map((item) => [item.id, item.status.includes('Approved')]))
+  );
+  const [editingId, setEditingId] = useState(null);
+  const [edits, setEdits] = useState(() =>
+    Object.fromEntries(conversationCaptures.map((item) => [item.id, item.summary]))
+  );
+
   return (
     <section className="panel advisor-question-panel" aria-labelledby="advisor-question-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">New recruit questions</span>
-          <h2 id="advisor-question-heading">Needs advisor answer</h2>
+          <span className="eyebrow">Legacy inbox</span>
+          <h2 id="advisor-question-heading">Approve what juniors captured</h2>
         </div>
       </div>
       <div className="question-queue">
-        {advisorQuestions.map((item) => (
-          <article key={item.question}>
+        {conversationCaptures.map((item) => (
+          <article key={item.id} className={approved[item.id] ? 'is-active' : ''}>
             <div className="risk-icon">
-              <AlertTriangle size={17} aria-hidden="true" />
+              <UserCheck size={17} aria-hidden="true" />
             </div>
             <div>
-              <span className="eyebrow">{item.recruit} / {item.project}</span>
-              <h3>{item.question}</h3>
-              <p>{item.cue}</p>
+              <span className="eyebrow">{item.step} / {item.capturedBy} / {item.source}</span>
+              <h3>{item.title}</h3>
+              {editingId === item.id ? (
+                <div className="approval-edit">
+                  <label className="sr-only" htmlFor={`fix-${item.id}`}>Fix wording for {item.title}</label>
+                  <textarea
+                    id={`fix-${item.id}`}
+                    rows="3"
+                    value={edits[item.id]}
+                    onChange={(event) => setEdits((current) => ({ ...current, [item.id]: event.target.value }))}
+                  />
+                </div>
+              ) : (
+                <p>{edits[item.id]}</p>
+              )}
+              <div className="mini-stats">
+                <span>{item.seniorTech}</span>
+                <span>{approved[item.id] ? 'Approved into body of work' : item.status}</span>
+                <span>{approved[item.id] ? '+1 citation' : item.legacyEffect}</span>
+              </div>
+              <div className="approval-actions">
+                <button
+                  type="button"
+                  className="approve-button"
+                  onClick={() => {
+                    setApproved((current) => ({ ...current, [item.id]: true }));
+                    setEditingId(null);
+                  }}
+                >
+                  {approved[item.id] ? 'Approved' : 'Approve'}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setEditingId((current) => current === item.id ? null : item.id)}
+                >
+                  {editingId === item.id ? 'Done fixing' : 'Fix wording'}
+                </button>
+              </div>
             </div>
-            <StatusPill tone={item.urgency === 'High' ? 'red' : 'amber'}>{item.urgency}</StatusPill>
+            <StatusPill tone={approved[item.id] ? 'green' : 'amber'}>{approved[item.id] ? 'Body of work' : 'Review'}</StatusPill>
           </article>
         ))}
       </div>
@@ -458,8 +925,8 @@ function RecruitQueue() {
     <section className="panel recruit-panel" aria-labelledby="recruit-queue-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Recruit support</span>
-          <h2 id="recruit-queue-heading">Questions and blockers</h2>
+          <span className="eyebrow">People learning your methods</span>
+          <h2 id="recruit-queue-heading">Mentor lineage</h2>
         </div>
       </div>
       <div className="recruit-table">
@@ -486,19 +953,19 @@ function AdvisorDraftQueue({ textEntries }) {
     <section className="panel draft-panel" aria-labelledby="draft-queue-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Vault draft queue</span>
-          <h2 id="draft-queue-heading">Review before release</h2>
+          <span className="eyebrow">Legacy record</span>
+          <h2 id="draft-queue-heading">Ready to add to body of work</h2>
         </div>
       </div>
       <div className="draft-queue">
         {textEntries.map((entry) => (
-          <article key={entry.id} className="draft-row new-draft">
+          <article key={entry.id} className={`draft-row new-draft ${entry.visibility === 'private' ? 'private-draft' : ''}`}>
             <div>
-              <span className="eyebrow">{entry.id} / {entry.type}</span>
+              <span className="eyebrow">{entry.id} / {entry.type} / {entry.visibility === 'private' ? 'Private note' : 'Approval queue'}</span>
               <h3>{entry.title}</h3>
               <p>{entry.detail}</p>
             </div>
-            <button type="button">Mark accurate</button>
+            <button type="button">{entry.visibility === 'private' ? 'Keep private' : 'Add to legacy'}</button>
           </article>
         ))}
         {seniorCaptureDrafts.map((draft) => (
@@ -516,28 +983,192 @@ function AdvisorDraftQueue({ textEntries }) {
   );
 }
 
-function AdminView() {
+function AdminView({ steps }) {
+  const techniqueCount = steps.reduce((sum, step) => sum + (step.techniqueNotes || []).length, 0);
+  const pendingQuestionCount = steps.reduce((sum, step) => sum + (step.questions || []).filter((question) => !question.answer).length, 0);
+  const endorsedCount = steps.reduce((sum, step) => sum + (step.techniqueNotes || []).filter((note) => note.endorsed).length, 0);
+
   return (
     <>
       <PageHeader
-        eyebrow="Admin control room"
-        title="Operations control room"
-        detail="Admin sees the full system: project status, who is working where, draft quality, and advisor participation."
+        eyebrow="Leadership"
+        title="Recognize the people whose methods carry the floor"
       >
         <div className="header-metrics">
-          {adminSignals.slice(0, 3).map((signal) => (
-            <Metric key={signal.label} value={signal.value} label={signal.label} detail={signal.detail} />
-          ))}
+          <Metric value="47" label="Top citations" detail="R. Thompson" />
+          <Metric value="23" label="Top mentor reach" detail="Technicians trained" />
+          <Metric value="3" label="Named techniques" detail="This quarter" />
         </div>
       </PageHeader>
 
       <section className="admin-layout">
-        <ProjectStatusBoard />
-        <AdvisorContributionBoard />
-        <AdminRiskBoard />
-        <VaultHealthBoard />
+        <LegacyRecognitionBoard />
+        <RetirementArtifactBoard />
+        <PendingLegacyBoard />
+        <ProjectStatusBoard steps={steps} />
       </section>
     </>
+  );
+}
+
+function RetirementArtifactBoard() {
+  const record = retirementRecords[0];
+  return (
+    <section className="panel retirement-panel" aria-labelledby="retirement-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Retirement artifact</span>
+          <h2 id="retirement-heading">{record.name}'s Legacy Record</h2>
+        </div>
+      </div>
+      <p className="retirement-headline">{record.headline}</p>
+      <div className="legacy-metric-row">
+        {record.metrics.map((metric) => <span key={metric}>{metric}</span>)}
+      </div>
+      <ul className="legacy-highlight-list">
+        {record.highlights.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </section>
+  );
+}
+
+function PendingLegacyBoard() {
+  return (
+    <section className="panel pending-legacy-panel" aria-labelledby="pending-legacy-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Approval gate</span>
+          <h2 id="pending-legacy-heading">Waiting to enter a body of work</h2>
+        </div>
+      </div>
+      <div className="draft-queue">
+        {conversationCaptures.map((item) => (
+          <article key={item.id} className="draft-row">
+            <div>
+              <span className="eyebrow">{item.step} / captured by {item.capturedBy}</span>
+              <h3>{item.title}</h3>
+              <p>{item.seniorTech} approval required / {item.legacyEffect}</p>
+            </div>
+            <StatusPill tone={item.status.includes('Approved') ? 'green' : 'amber'}>
+              {item.status.includes('Approved') ? 'Approved' : 'Waiting'}
+            </StatusPill>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LegacyRecognitionBoard() {
+  return (
+    <section className="panel legacy-recognition-panel" aria-labelledby="legacy-recognition-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Recognition</span>
+          <h2 id="legacy-recognition-heading">Impact that should be named out loud</h2>
+        </div>
+      </div>
+      <div className="recognition-grid">
+        <RecognitionList title="Most-cited technicians" items={recognitionLeaders.technicians} />
+        <RecognitionList title="Most-used techniques" items={recognitionLeaders.methods} />
+        <RecognitionList title="Top mentors" items={recognitionLeaders.mentors} />
+      </div>
+      <div className="named-technique-row">
+        {legacyTechniques.map((technique) => (
+          <article key={technique.id}>
+            <span className="eyebrow">{technique.step}</span>
+            <h3>{technique.name}</h3>
+            <p>{technique.impact}</p>
+            <div className="mini-stats">
+              <span>{technique.author}</span>
+              <span>{technique.usedOn}</span>
+              <span>{technique.technicians}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RecognitionList({ title, items }) {
+  return (
+    <article>
+      <h3>{title}</h3>
+      {items.map((item) => (
+        <div key={item.name}>
+          <strong>{item.name}</strong>
+          <span>{item.impact}</span>
+          <p>{item.detail}</p>
+        </div>
+      ))}
+    </article>
+  );
+}
+
+function SystemHealthBoard() {
+  return (
+    <section className="panel system-health-board" aria-labelledby="system-health-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">System health</span>
+          <h2 id="system-health-heading">Current load</h2>
+        </div>
+      </div>
+      <div className="health-grid">
+        {systemHealth.map((item) => (
+          <article key={item.label} className={`health-${item.tone}`}>
+            <strong>{item.value}</strong>
+            <span>{item.label}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AdminAdoptionBoard() {
+  return (
+    <section className="panel adoption-board" aria-labelledby="adoption-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Legacy loop</span>
+          <h2 id="adoption-heading">Reuse signals</h2>
+        </div>
+      </div>
+      <div className="adoption-grid">
+        {adminAdoptionSignals.map((signal) => (
+          <article key={signal.label}>
+            <strong>{signal.value}</strong>
+            <span>{signal.label}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RepeatQuestionBoard() {
+  return (
+    <section className="panel repeat-board" aria-labelledby="repeat-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Procedure gaps</span>
+          <h2 id="repeat-heading">Repeat questions</h2>
+        </div>
+      </div>
+      <div className="repeat-list">
+        {repeatQuestionSignals.map((item) => (
+          <article key={item.module}>
+            <div>
+              <h3>{item.module}</h3>
+              <p>{item.owner} / {item.action}</p>
+            </div>
+            <strong>{item.repeats}</strong>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -566,9 +1197,10 @@ function AdminRiskBoard() {
   );
 }
 
-function ProjectStatusBoard() {
+function ProjectStatusBoard({ steps }) {
+  const blockedStep = steps.find((step) => step.status === 'blocked');
   return (
-    <section className="panel" aria-labelledby="project-status-heading">
+    <section className="panel project-status-panel" aria-labelledby="project-status-heading">
       <div className="section-heading">
         <div>
           <span className="eyebrow">Project status</span>
@@ -580,7 +1212,11 @@ function ProjectStatusBoard() {
           <article key={project.name}>
             <div>
               <h3>{project.name}</h3>
-              <p>{project.activeStep}</p>
+              <p>
+                {project.blocked && blockedStep?.identifiedBy
+                  ? `${blockedStep.identifiedBy} identified an issue at Step ${blockedStep.id}`
+                  : project.activeStep}
+              </p>
             </div>
             <div>
               <strong>{project.owner}</strong>
@@ -602,11 +1238,11 @@ function ProjectStatusBoard() {
 
 function AdvisorContributionBoard() {
   return (
-    <section className="panel" aria-labelledby="advisor-contribution-heading">
+    <section className="panel advisor-contribution-panel" aria-labelledby="advisor-contribution-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Advisor contribution</span>
-          <h2 id="advisor-contribution-heading">Who is adding knowledge</h2>
+          <span className="eyebrow">Expert recognition</span>
+          <h2 id="advisor-contribution-heading">Senior tech contributions</h2>
         </div>
       </div>
       <div className="advisor-cards">
@@ -620,6 +1256,7 @@ function AdvisorContributionBoard() {
               <strong>{advisor.entries}</strong>
             </div>
             <p>{advisor.focus}</p>
+            <p className="impact-line">{advisor.impact}</p>
             <div className="mini-stats">
               <span>{advisor.approved} approved</span>
               <span>{advisor.pending} pending</span>
@@ -631,15 +1268,16 @@ function AdvisorContributionBoard() {
   );
 }
 
-function VaultHealthBoard() {
+function VaultHealthBoard({ steps }) {
   const validatedCount = useMemo(() => vaultEntries.filter((entry) => entry.status === 'Validated').length, []);
+  const liveNotes = steps.flatMap((step) => (step.techniqueNotes || []).map((note) => ({ ...note, stepId: step.id, stepTitle: step.title })));
 
   return (
     <section className="panel vault-admin" aria-labelledby="vault-health-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Knowledge Vault</span>
-          <h2 id="vault-health-heading">Drafts and validated entries</h2>
+          <span className="eyebrow">Legacy record</span>
+          <h2 id="vault-health-heading">Drafts and approved entries</h2>
         </div>
         <div className="search-box">
           <Search size={16} aria-hidden="true" />
@@ -661,6 +1299,15 @@ function VaultHealthBoard() {
         </div>
         <div>
           <h3>Recent intake</h3>
+          {liveNotes.slice(0, 3).map((item) => (
+            <article key={item.id}>
+              <div>
+                <strong>Step {item.stepId}: {item.stepTitle}</strong>
+                <span>{item.author} / {item.endorsed ? `endorsed by ${item.endorsedBy}` : 'needs endorsement'}</span>
+              </div>
+              <StatusPill tone={item.endorsed ? 'green' : 'amber'}>{item.endorsed ? 'verified' : 'review'}</StatusPill>
+            </article>
+          ))}
           {intakeItems.map((item) => (
             <article key={item.id}>
               <div>
@@ -678,23 +1325,133 @@ function VaultHealthBoard() {
 
 export default function App() {
   const [activeView, setActiveView] = useState('technician');
+  const [steps, setSteps] = useState(technicianSteps);
+  const [profileName, setProfileName] = useState(null);
   const activeLabel = views.find((view) => view.key === activeView)?.label || 'Technician';
+  const activeProfile = technicianProfiles.find((profile) => profile.name === profileName);
+
+  function updateStep(stepId, updater) {
+    setSteps((current) => current.map((step) => step.id === stepId ? updater(step) : step));
+  }
+
+  function handleAddNote(stepId, text) {
+    updateStep(stepId, (step) => ({
+      ...step,
+      techniqueNotes: [
+        ...(step.techniqueNotes || []),
+        {
+          id: `TN-${stepId}-${Date.now()}`,
+          author: procedure.assignedMentor,
+          text,
+          createdAt: 'Just now',
+          endorsed: false,
+          endorsedBy: null,
+          appliedAcrossBuilds: 0,
+        },
+      ],
+    }));
+  }
+
+  function handleAskExpert(stepId, text) {
+    updateStep(stepId, (step) => ({
+      ...step,
+      questions: [
+        ...(step.questions || []),
+        {
+          id: `Q-${stepId}-${Date.now()}`,
+          askedBy: procedure.recruit,
+          text,
+          askedAt: 'Just now',
+          answer: null,
+        },
+      ],
+    }));
+  }
+
+  function handleEndorseNote(stepId, noteId) {
+    updateStep(stepId, (step) => ({
+      ...step,
+      techniqueNotes: (step.techniqueNotes || []).map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              endorsed: true,
+              endorsedBy: 'S. Reyes',
+              appliedAcrossBuilds: Math.max(note.appliedAcrossBuilds || 0, 1),
+            }
+          : note
+      ),
+    }));
+  }
+
+  function handleAnswerQuestion(stepId, questionId, text) {
+    updateStep(stepId, (step) => ({
+      ...step,
+      questions: (step.questions || []).map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              answer: {
+                author: procedure.assignedMentor,
+                text,
+                answeredAt: 'Just now',
+              },
+            }
+          : question
+      ),
+    }));
+  }
+
+  function handleSaveAnswerNote(stepId, questionId) {
+    updateStep(stepId, (step) => {
+      const question = (step.questions || []).find((item) => item.id === questionId);
+      if (!question?.answer || question.savedAsNote) return step;
+      return {
+        ...step,
+        techniqueNotes: [
+          ...(step.techniqueNotes || []),
+          {
+            id: `TN-ANSWER-${stepId}-${Date.now()}`,
+            author: question.answer.author,
+            text: question.answer.text,
+            createdAt: 'Saved from answer',
+            endorsed: false,
+            endorsedBy: null,
+            appliedAcrossBuilds: 0,
+            sourceQuestion: question.text,
+          },
+        ],
+        questions: (step.questions || []).map((item) =>
+          item.id === questionId ? { ...item, savedAsNote: true } : item
+        ),
+      };
+    });
+  }
 
   return (
     <div className="app-shell">
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <ShellHeader activeView={activeView} setActiveView={setActiveView} />
       <main id="main-content" className={`view-${activeView}`} tabIndex="-1" aria-label={`${activeLabel} workspace`}>
-        {activeView === 'technician' && <TechnicianView />}
-        {activeView === 'advisor' && <AdvisorView />}
-        {activeView === 'admin' && <AdminView />}
+        {activeView === 'technician' && (
+          <TechnicianView
+            steps={steps}
+            onAddNote={handleAddNote}
+            onAskExpert={handleAskExpert}
+            onSaveAnswerNote={handleSaveAnswerNote}
+            onOpenProfile={setProfileName}
+          />
+        )}
+        {activeView === 'advisor' && (
+          <AdvisorView
+            steps={steps}
+            onEndorseNote={handleEndorseNote}
+            onAnswerQuestion={handleAnswerQuestion}
+          />
+        )}
+        {activeView === 'admin' && <AdminView steps={steps} />}
       </main>
-      <div className="security-footer" aria-label="Deployment posture">
-        <ShieldCheck size={16} aria-hidden="true" />
-        <span>On-prem / CMMC-aware / revision controlled</span>
-        <Radio size={16} aria-hidden="true" />
-        <span>Live project demo data</span>
-      </div>
+      <ProfileModal profile={activeProfile} onClose={() => setProfileName(null)} />
     </div>
   );
 }

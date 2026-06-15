@@ -24,9 +24,13 @@ export const technicianSteps = [
     workstream: 'Hydraulic',
     owner: 'M. Chen',
     status: 'complete',
+    completedBy: 'M. Chen',
+    completedAt: 'Jun 13, 2026 09:10',
     duration: '38 min',
     evidence: ['Torque log uploaded', 'Photo set accepted'],
     vaultRefs: ['KV-1042'],
+    techniqueNotes: [],
+    questions: [],
   },
   {
     id: 23,
@@ -34,9 +38,23 @@ export const technicianSteps = [
     workstream: 'Hydraulic',
     owner: 'M. Chen',
     status: 'complete',
+    completedBy: 'J. Martinez',
+    completedAt: 'Jun 13, 2026 10:25',
     duration: '52 min',
     evidence: ['Port labels verified', 'Routing photo accepted'],
     vaultRefs: ['KV-1184'],
+    techniqueNotes: [
+      {
+        id: 'TN-023-JM',
+        author: 'J. Martinez',
+        text: "Leave the last clamp loose until the return line warms during leak check. Cold-fit lines can pull the label sleeve out of view.",
+        createdAt: 'Jun 13, 2026 10:30',
+        endorsed: false,
+        endorsedBy: null,
+        appliedAcrossBuilds: 2,
+      },
+    ],
+    questions: [],
   },
   {
     id: 24,
@@ -50,6 +68,26 @@ export const technicianSteps = [
     guidance:
       'Follow the released pressure ramp sequence. Do not advance if pressure drop exceeds acceptance band or if gauge certificate is expired.',
     vaultRefs: ['KV-1042', 'KV-1210'],
+    completedBy: 'R. Thompson',
+    techniqueNotes: [
+      {
+        id: 'TN-024-RT',
+        author: 'R. Thompson',
+        named: true,
+        name: 'Thompson Pressure-Ramp Method',
+        text: "Ramp pressure in 25% increments and hold 5 min at each stage. If you jump straight to 150% you'll trip the relief valve and have to start over.",
+        createdAt: 'Jun 12, 2026 13:40',
+        endorsed: true,
+        endorsedBy: 'S. Reyes',
+        appliedAcrossBuilds: 14,
+        citations: {
+          buildCount: 14,
+          customers: ['U.S. Navy', 'Collins', 'Delta TechOps'],
+          technicians: ['D. Okafor', 'A. Morgan', 'M. Chen', 'J. Martinez', 'N. Shah', 'T. Rodriguez', 'K. Williams', 'J. Patel', 'R. Wells'],
+        },
+      },
+    ],
+    questions: [],
   },
   {
     id: 25,
@@ -61,6 +99,22 @@ export const technicianSteps = [
     blocker: 'Drawing revision mismatch between router and released schematic.',
     evidence: ['ECO note', 'Wiring photo'],
     vaultRefs: ['KV-1098'],
+    identifiedBy: 'J. Martinez',
+    completedBy: 'J. Martinez',
+    techniqueNotes: [],
+    questions: [
+      {
+        id: 'Q-025-DO',
+        askedBy: 'D. Okafor',
+        text: 'Is the corrected schematic for the DAQ wiring posted anywhere yet?',
+        askedAt: 'Jun 14, 2026 14:12',
+        answer: {
+          author: 'R. Thompson',
+          text: "Not yet. Engineering has it. Don't proceed on the old one, you'll have to rewire. I'll ping you when it's released.",
+          answeredAt: 'Jun 14, 2026 14:31',
+        },
+      },
+    ],
   },
   {
     id: 26,
@@ -72,6 +126,125 @@ export const technicianSteps = [
     dependencies: ['Electrical Zone B released', 'I/O map verified'],
     evidence: ['Program hash', 'I/O checkout file'],
     vaultRefs: ['KV-1304'],
+    techniqueNotes: [],
+    questions: [],
+  },
+];
+
+export const technicianProfiles = [
+  {
+    name: 'R. Thompson',
+    role: 'Senior Test Technician',
+    yearsExperience: 31,
+    yearsAtTestek: 31,
+    stepsCompleted: 412,
+    projectsContributed: 9,
+    techniqueNotesAuthored: 23,
+    endorsementsReceived: 19,
+    questionsAnswered: 31,
+    totalCitations: 47,
+    techniciansTrained: 23,
+    buildsShaped: ['Navy HPU test stand', 'Collins flight-control rig', 'Delta TechOps hydraulic cart'],
+    legacyLine: 'When R. Thompson retires, his pressure-ramp judgment stays in every build that cites his method.',
+    signatureMethods: ['Thompson Pressure-Ramp Method', 'DAQ wiring hold discipline', 'Pre-FAT hydraulic leak triage'],
+    menteeLinks: ['D. Okafor used Thompson Pressure-Ramp Method', 'A. Morgan trained on staged pressure holds', 'N. Shah confirmed relief-valve prevention cue'],
+  },
+  {
+    name: 'J. Martinez',
+    role: 'Test Technician',
+    yearsExperience: 12,
+    yearsAtTestek: 12,
+    stepsCompleted: 287,
+    projectsContributed: 7,
+    techniqueNotesAuthored: 11,
+    endorsementsReceived: 6,
+    questionsAnswered: 14,
+    totalCitations: 18,
+    techniciansTrained: 8,
+    buildsShaped: ['787 flight control rig', 'Navy HPU electrical bay'],
+    legacyLine: 'Known for turning field catches into named methods junior technicians can reuse safely.',
+    signatureMethods: ['Martinez Thermal-Settle Procedure', 'Return-line routing checks', 'Revision mismatch identification'],
+    menteeLinks: ['D. Okafor used thermal-settle cue', 'A. Morgan reused return-line routing check'],
+  },
+  {
+    name: 'D. Okafor',
+    role: 'Junior Technician',
+    yearsExperience: 2,
+    yearsAtTestek: 2,
+    stepsCompleted: 64,
+    projectsContributed: 2,
+    techniqueNotesAuthored: 1,
+    endorsementsReceived: 0,
+    questionsAnswered: 0,
+    totalCitations: 0,
+    techniciansTrained: 0,
+    buildsShaped: ['Navy HPU electrical bay'],
+    legacyLine: 'Uses direct questions to turn uncertainty into reusable step knowledge.',
+    signatureMethods: ['Escalation questions', 'Evidence packet preparation'],
+  },
+  {
+    name: 'S. Reyes',
+    role: 'Supervisor',
+    yearsExperience: 16,
+    yearsAtTestek: 16,
+    stepsCompleted: 338,
+    projectsContributed: 11,
+    techniqueNotesAuthored: 7,
+    endorsementsReceived: 12,
+    questionsAnswered: 18,
+    totalCitations: 12,
+    techniciansTrained: 10,
+    buildsShaped: ['FAT readiness program', 'Hydraulic Power Unit Test Stand'],
+    legacyLine: 'Protects the official procedure by validating field tips before release.',
+    signatureMethods: ['Technique endorsement', 'Phase-gate signoff', 'QA-ready evidence reviews'],
+  },
+  {
+    name: 'M. Chen',
+    role: 'Hydraulic Systems Lead',
+    yearsExperience: 8,
+    yearsAtTestek: 8,
+    stepsCompleted: 231,
+    projectsContributed: 6,
+    techniqueNotesAuthored: 14,
+    endorsementsReceived: 8,
+    questionsAnswered: 17,
+    totalCitations: 22,
+    techniciansTrained: 11,
+    buildsShaped: ['787 flight control rig', 'F-35 hydraulic cart'],
+    legacyLine: 'Makes hydraulic setup repeatable for new recruits.',
+    signatureMethods: ['Gauge setup', 'Pressure decay evidence', 'Manifold torque verification'],
+  },
+  {
+    name: 'E. Falkowski',
+    role: 'Hydraulics Senior Tech',
+    yearsExperience: 26,
+    yearsAtTestek: 26,
+    stepsCompleted: 384,
+    projectsContributed: 10,
+    techniqueNotesAuthored: 21,
+    endorsementsReceived: 16,
+    questionsAnswered: 24,
+    totalCitations: 31,
+    techniciansTrained: 17,
+    buildsShaped: ['Hydraulic Power Unit Test Stand', 'Legacy HPU stand'],
+    legacyLine: 'Senior tech of record for pressure acceptance and legacy stand behavior.',
+    signatureMethods: ['Bleed-down safety', 'Legacy pressure acceptance', 'Recruit escalation routing'],
+  },
+  {
+    name: 'K. Williams',
+    role: 'Electrical Senior Tech',
+    yearsExperience: 14,
+    yearsAtTestek: 14,
+    stepsCompleted: 302,
+    projectsContributed: 8,
+    techniqueNotesAuthored: 13,
+    endorsementsReceived: 7,
+    questionsAnswered: 19,
+    totalCitations: 16,
+    techniciansTrained: 9,
+    buildsShaped: ['Navy HPU electrical bay', 'Controls checkout bench'],
+    legacyLine: 'Keeps electrical holds visible before they become rework.',
+    signatureMethods: ['ECO hold triage', 'Zone B termination checks', 'Signal/power separation'],
   },
 ];
 
@@ -128,7 +301,7 @@ export const vaultEntries = [
     status: 'Validated',
     owner: 'E. Falkowski',
     reviewer: 'Quality Engineering',
-    source: 'Legacy manual + advisor review',
+    source: 'Legacy manual + senior tech review',
     revision: 'Rev A',
     confidence: 89,
     citations: 9,
@@ -218,12 +391,59 @@ export const recruitHelpTopics = [
   },
   {
     question: 'Who should I contact?',
-    answer: 'Start with assigned advisor E. Falkowski. For the hydraulic pressure module, M. Chen is the suggested mentor.',
+    answer: 'Start with assigned senior tech E. Falkowski. For the hydraulic pressure module, M. Chen is the suggested mentor.',
   },
   {
     question: 'What is blocking the next crew?',
     answer: 'Electrical Zone B is on hold because the router and released schematic do not match. Wait for ECO-4421 disposition.',
   },
+];
+
+export const similarResolvedBlockers = [
+  {
+    id: 'SIM-118',
+    title: 'Zone B schematic mismatch',
+    project: '787 flight control rig',
+    resolution: 'Held work, attached ECO disposition, resumed after released schematic Rev F.',
+    owner: 'K. Williams',
+    reused: 5,
+  },
+  {
+    id: 'SIM-104',
+    title: 'Pressure ramp relief trip',
+    project: 'Legacy HPU stand',
+    resolution: 'Used 25% staged ramp with 5 min stabilization holds.',
+    owner: 'R. Thompson',
+    reused: 14,
+  },
+];
+
+export const repeatQuestionSignals = [
+  {
+    module: 'Pressure decay evidence',
+    repeats: 7,
+    owner: 'M. Chen',
+    action: 'Add evidence checklist',
+  },
+  {
+    module: 'ECO source of truth',
+    repeats: 5,
+    owner: 'K. Williams',
+    action: 'Add source priority rule',
+  },
+  {
+    module: 'Hydraulic bleed-down',
+    repeats: 4,
+    owner: 'E. Falkowski',
+    action: 'Convert video to step note',
+  },
+];
+
+export const systemHealth = [
+  { label: 'Open blockers', value: '3', tone: 'red' },
+  { label: 'Unanswered asks', value: '2', tone: 'amber' },
+  { label: 'Draft backlog', value: '8', tone: 'amber' },
+  { label: 'Approved updates', value: '14', tone: 'green' },
 ];
 
 export const technicianGuardrails = [
@@ -241,14 +461,53 @@ export const technicianGuardrails = [
   },
 ];
 
+export const advisorProtectionFeatures = [
+  {
+    title: 'Private drafts',
+    detail: 'Only visible to the senior tech.',
+  },
+  {
+    title: 'Credited answers',
+    detail: 'Author and reviewer stay attached.',
+  },
+  {
+    title: 'Review gate',
+    detail: 'Formal notes require approval.',
+  },
+];
+
+export const adminAdoptionSignals = [
+  {
+    label: 'Credited saves',
+    value: '11',
+    detail: 'Rework prevented',
+  },
+  {
+    label: 'Private drafts',
+    value: '6',
+    detail: 'Senior tech-owned',
+  },
+  {
+    label: 'Repeat questions',
+    value: '3',
+    detail: 'Procedure gaps',
+  },
+  {
+    label: 'Senior tech opt-in',
+    value: '78%',
+    detail: 'This month',
+  },
+];
+
 export const advisorContributions = [
   {
     advisor: 'E. Falkowski',
-    role: 'Hydraulics advisor',
+    role: 'Hydraulics senior tech',
     entries: 8,
     approved: 5,
     pending: 3,
     focus: 'Pressure ramp acceptance, bleed-down safety, legacy test stand patterns',
+    impact: '6 blockers resolved',
   },
   {
     advisor: 'M. Chen',
@@ -257,14 +516,109 @@ export const advisorContributions = [
     approved: 4,
     pending: 2,
     focus: 'Manifold torque verification, gauge setup, pressure decay evidence',
+    impact: '9 evidence checks reused',
   },
   {
     advisor: 'K. Williams',
-    role: 'Electrical advisor',
+    role: 'Electrical senior tech',
     entries: 4,
     approved: 2,
     pending: 2,
     focus: 'Revision mismatch triage, Zone B termination checks, ECO holds',
+    impact: '2 release conflicts caught',
+  },
+];
+
+export const legacyTechniques = [
+  {
+    id: 'LEG-RT-010',
+    name: 'Thompson Pressure-Ramp Method',
+    author: 'R. Thompson',
+    step: 'Step 10 / Step 24 pressure testing',
+    usedOn: '14 builds',
+    customers: '3 customers',
+    technicians: '9 technicians',
+    impact: 'Prevents relief-valve trips during 150 percent pressure hold.',
+  },
+  {
+    id: 'LEG-JM-053',
+    name: 'Martinez Thermal-Settle Procedure',
+    author: 'J. Martinez',
+    step: 'Step 53 hydraulic return validation',
+    usedOn: '7 builds',
+    customers: '2 customers',
+    technicians: '6 technicians',
+    impact: 'Avoids false sensor replacement when return-line temperature lags.',
+  },
+  {
+    id: 'LEG-EF-024',
+    name: 'Falkowski Bleed-Down Check',
+    author: 'E. Falkowski',
+    step: 'Step 24 pressure release',
+    usedOn: '9 builds',
+    customers: '2 customers',
+    technicians: '7 technicians',
+    impact: 'Keeps trapped pressure visible before manifold work starts.',
+  },
+];
+
+export const recognitionLeaders = {
+  technicians: [
+    { name: 'R. Thompson', impact: '47 citations', detail: '23 technicians trained' },
+    { name: 'E. Falkowski', impact: '31 citations', detail: '17 technicians trained' },
+    { name: 'M. Chen', impact: '22 citations', detail: '11 technicians trained' },
+  ],
+  methods: [
+    { name: 'Thompson Pressure-Ramp Method', impact: '14 builds', detail: 'U.S. Navy, Collins, Delta TechOps' },
+    { name: 'Martinez Thermal-Settle Procedure', impact: '7 builds', detail: '6 technicians reused' },
+    { name: 'Falkowski Bleed-Down Check', impact: '9 builds', detail: '7 technicians reused' },
+  ],
+  mentors: [
+    { name: 'R. Thompson', impact: '23 trained', detail: 'Pressure testing and FAT readiness' },
+    { name: 'E. Falkowski', impact: '17 trained', detail: 'Hydraulic acceptance judgment' },
+    { name: 'S. Reyes', impact: '10 trained', detail: 'Quality gate discipline' },
+  ],
+};
+
+export const conversationCaptures = [
+  {
+    id: 'CAPTURE-031',
+    step: 'Step 31',
+    project: 'Navy HPU electrical bay',
+    capturedBy: 'D. Okafor',
+    seniorTech: 'J. Martinez',
+    source: 'In-person bay conversation',
+    title: 'Return line warm before pressure stabilizes',
+    summary: 'If the return line warms before pressure stabilizes, check bypass valve position before replacing the flow sensor.',
+    status: 'Waiting for J. Martinez approval',
+    legacyEffect: '+1 citation when approved',
+  },
+  {
+    id: 'CAPTURE-053',
+    step: 'Step 53',
+    project: '787 flight control rig',
+    capturedBy: 'A. Morgan',
+    seniorTech: 'R. Thompson',
+    source: 'Voice summary after shift handoff',
+    title: 'Pressure ramp relief-valve prevention',
+    summary: 'Ramp in 25 percent stages and hold five minutes at each stage before final acceptance pressure.',
+    status: 'Approved by R. Thompson',
+    legacyEffect: 'Added to Thompson Pressure-Ramp Method',
+  },
+];
+
+export const retirementRecords = [
+  {
+    name: 'R. Thompson',
+    role: 'Senior Test Technician',
+    years: 31,
+    headline: 'When R. Thompson retires, his pressure-ramp judgment stays in every build that cites his method.',
+    metrics: ['47 citations', '9 builds shaped', '23 technicians trained', '3 named techniques'],
+    highlights: [
+      'Thompson Pressure-Ramp Method became the standard pressure-hold cue for HPU builds.',
+      'Mentored hydraulic acceptance judgment across Navy, Collins, and Delta TechOps programs.',
+      'His methods are reused by technicians who never worked the same shift with him.',
+    ],
   },
 ];
 
@@ -289,7 +643,7 @@ export const captureQualityChecks = [
   'Tie the note to a procedure step, project, or reusable module.',
   'Add acceptance criteria or a stop condition, not just advice.',
   'Name the evidence needed to prove the step was done correctly.',
-  'Flag whether QA, engineering, or advisor validation is required.',
+  'Flag whether QA, engineering, or senior tech validation is required.',
 ];
 
 export const adminRiskSignals = [
@@ -308,7 +662,7 @@ export const adminRiskSignals = [
   {
     label: 'Training gaps',
     value: '5',
-    detail: 'Recruit questions converted into advisor capture prompts.',
+    detail: 'Recruit questions converted into senior tech capture prompts.',
     tone: 'blue',
   },
   {
@@ -323,7 +677,7 @@ export const intakeItems = [
   {
     id: 'CAP-221',
     type: 'Video walkthrough',
-    title: 'Advisor explains safe hydraulic bleed-down',
+    title: 'Senior tech explains safe hydraulic bleed-down',
     submittedBy: 'T. Rodriguez',
     status: 'AI draft ready',
     age: '2h',
@@ -351,7 +705,7 @@ export const seniorCaptureDrafts = [
     id: 'DRAFT-318',
     title: 'Bleed-down sequence for trapped hydraulic pressure',
     source: 'Video walkthrough',
-    status: 'Ready for advisor review',
+    status: 'Ready for senior tech review',
     linkedProcedure: 'TSK-PROC-047 step 24',
     transcript:
       'Open the low-point return valve first, watch for pressure creep, then verify the gauge returns to zero before loosening the manifold plug.',
@@ -374,7 +728,7 @@ export const seniorCaptureDrafts = [
 export const seniorReviewChecklist = [
   'Confirm the draft does not conflict with released drawings or ECO status.',
   'Add acceptance criteria, not just advice.',
-  'Mark whether QA, engineering, or advisor approval is required.',
+  'Mark whether QA, engineering, or senior tech approval is required.',
   'Attach source evidence so future technicians can cite the entry.',
 ];
 
@@ -395,14 +749,14 @@ export const validationQueue = [
     title: 'Shipping blank installation sequence',
     source: 'Video walkthrough',
     risk: 'Low',
-    action: 'Advisor approve',
+    action: 'Senior tech approve',
   },
 ];
 
 export const adminSignals = [
   { label: 'Open procedures', value: '7', detail: '3 with active blockers' },
   { label: 'Evidence packets', value: '42', detail: '5 awaiting QA witness' },
-  { label: 'Vault drafts', value: '14', detail: '8 from advisor capture' },
+  { label: 'Vault drafts', value: '14', detail: '8 from senior tech capture' },
   { label: 'Reuse rate', value: '64%', detail: 'modules cited this month' },
 ];
 
@@ -421,7 +775,7 @@ export const domainBasis = [
   },
   {
     label: 'Human factors',
-    detail: 'Advisor knowledge is captured in natural formats, then validated.',
+    detail: 'Senior tech knowledge is captured in natural formats, then validated.',
   },
 ];
 
@@ -448,7 +802,7 @@ export const meetingContext = [
   },
   {
     label: 'Prototype comparison',
-    detail: 'Current V2 should be reviewed beside the older prototype, left to right: operations layer, advisor layer, then admin.',
+    detail: 'Current V2 should be reviewed beside the older prototype, left to right: operations layer, senior tech layer, then admin.',
   },
   {
     label: 'Product posture',
