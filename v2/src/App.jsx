@@ -143,26 +143,34 @@ function ProfileModal({ profile, onClose }) {
             </div>
           ))}
         </div>
-        {profile.buildsShaped?.length > 0 && (
-          <div className="legacy-section">
-            <h3>Builds shaped</h3>
-            <ul>{profile.buildsShaped.map((item) => <li key={item}>{item}</li>)}</ul>
-          </div>
-        )}
-        {profile.signatureMethods?.length > 0 && (
-          <div className="signature-methods">
-            <h3>Techniques authored</h3>
+        <div className="legacy-record-grid">
+          {profile.buildsShaped?.length > 0 && (
+            <div className="legacy-section">
+              <h3>Builds shaped</h3>
+              <ul>{profile.buildsShaped.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          )}
+          {profile.signatureMethods?.length > 0 && (
+            <div className="legacy-section">
+              <h3>Techniques authored</h3>
+              <ul>{profile.signatureMethods.map((method) => <li key={method}>{method}</li>)}</ul>
+            </div>
+          )}
+          {profile.menteeLinks?.length > 0 && (
+            <div className="legacy-section">
+              <h3>People trained</h3>
+              <ul>{profile.menteeLinks.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          )}
+          <div className="legacy-section legacy-timeline">
+            <h3>Career record</h3>
             <ul>
-              {profile.signatureMethods.map((method) => <li key={method}>{method}</li>)}
+              <li>First cited method: pressure-ramp acceptance hold</li>
+              <li>Most reused method: Thompson Pressure-Ramp Method</li>
+              <li>Leadership action: eligible for weekly recognition</li>
             </ul>
           </div>
-        )}
-        {profile.menteeLinks?.length > 0 && (
-          <div className="legacy-section">
-            <h3>People trained</h3>
-            <ul>{profile.menteeLinks.map((item) => <li key={item}>{item}</li>)}</ul>
-          </div>
-        )}
+        </div>
       </section>
     </div>
   );
@@ -363,6 +371,9 @@ function ConversationCaptureCard({ step }) {
 }
 
 function StandingOnShoulders({ onOpenProfile }) {
+  const [used, setUsed] = useState(false);
+  const citationCount = used ? 15 : 14;
+
   return (
     <section className="panel standing-card" aria-labelledby="standing-heading">
       <div className="section-heading compact-heading">
@@ -374,13 +385,24 @@ function StandingOnShoulders({ onOpenProfile }) {
       </div>
       <p>This pressure step uses the <strong>Thompson Pressure-Ramp Method</strong>.</p>
       <div className="mini-stats">
-        <span>14 builds</span>
+        <span>{citationCount} builds</span>
         <span>3 customers</span>
         <span>9 technicians</span>
       </div>
-      <button type="button" className="open-reply" onClick={() => onOpenProfile?.('R. Thompson')}>
-        View R. Thompson's body of work
-      </button>
+      <div className="method-actions">
+        <button
+          type="button"
+          className={`method-action method-primary${used ? ' is-cited' : ''}`}
+          onClick={() => setUsed(true)}
+          disabled={used}
+        >
+          {used ? 'Method cited' : 'Used this method'}
+        </button>
+        <button type="button" className="method-action method-secondary" onClick={() => onOpenProfile?.('R. Thompson')}>
+          View body of work
+        </button>
+      </div>
+      {used && <p className="sent-state" role="status">Citation added to R. Thompson's body of work.</p>}
     </section>
   );
 }
@@ -710,11 +732,33 @@ function AdvisorView({ steps, onEndorseNote, onAnswerQuestion }) {
       </PageHeader>
 
       <section className="role-grid advisor-grid">
+        <SeniorLegacyRecord />
         <AdvisorCaptureForm onSubmit={handleSubmit} />
         <LegacyApprovalInbox />
         <RecruitQueue />
       </section>
     </>
+  );
+}
+
+function SeniorLegacyRecord() {
+  return (
+    <section className="panel senior-legacy-record" aria-labelledby="senior-legacy-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">Your career record</span>
+          <h2 id="senior-legacy-heading">E. Falkowski's body of work</h2>
+        </div>
+        <StatusPill tone="blue">26 years</StatusPill>
+      </div>
+      <p className="legacy-record-line">Your hydraulic acceptance judgment is now cited across active HPU builds.</p>
+      <div className="legacy-metric-row compact">
+        <span>31 citations</span>
+        <span>17 techs trained</span>
+        <span>10 builds shaped</span>
+        <span>2 named methods</span>
+      </div>
+    </section>
   );
 }
 
@@ -856,6 +900,7 @@ function LegacyApprovalInbox() {
   const [edits, setEdits] = useState(() =>
     Object.fromEntries(conversationCaptures.map((item) => [item.id, item.summary]))
   );
+  const [reward, setReward] = useState('');
 
   return (
     <section className="panel advisor-question-panel" aria-labelledby="advisor-question-heading">
@@ -865,6 +910,7 @@ function LegacyApprovalInbox() {
           <h2 id="advisor-question-heading">Approve what juniors captured</h2>
         </div>
       </div>
+      {reward && <p className="approval-reward" role="status">{reward}</p>}
       <div className="question-queue">
         {conversationCaptures.map((item) => (
           <article key={item.id} className={approved[item.id] ? 'is-active' : ''}>
@@ -899,6 +945,7 @@ function LegacyApprovalInbox() {
                   onClick={() => {
                     setApproved((current) => ({ ...current, [item.id]: true }));
                     setEditingId(null);
+                    setReward(`+1 citation added. ${item.capturedBy} is now trained on ${item.seniorTech}'s method.`);
                   }}
                 >
                   {approved[item.id] ? 'Approved' : 'Approve'}
@@ -1060,6 +1107,8 @@ function PendingLegacyBoard() {
 }
 
 function LegacyRecognitionBoard() {
+  const [recognitionAction, setRecognitionAction] = useState('');
+
   return (
     <section className="panel legacy-recognition-panel" aria-labelledby="legacy-recognition-heading">
       <div className="section-heading">
@@ -1073,6 +1122,18 @@ function LegacyRecognitionBoard() {
         <RecognitionList title="Most-used techniques" items={recognitionLeaders.methods} />
         <RecognitionList title="Top mentors" items={recognitionLeaders.mentors} />
       </div>
+      <div className="recognition-actions" aria-label="Leadership recognition actions">
+        <button type="button" onClick={() => setRecognitionAction('R. Thompson added to weekly recognition.')}>
+          Add to weekly recognition
+        </button>
+        <button type="button" onClick={() => setRecognitionAction('Retirement artifact prepared for R. Thompson.')}>
+          Prepare retirement artifact
+        </button>
+        <button type="button" onClick={() => setRecognitionAction('Thompson Pressure-Ramp Method nominated for named technique review.')}>
+          Nominate named technique
+        </button>
+      </div>
+      {recognitionAction && <p className="sent-state" role="status">{recognitionAction}</p>}
       <div className="named-technique-row">
         {legacyTechniques.map((technique) => (
           <article key={technique.id}>
