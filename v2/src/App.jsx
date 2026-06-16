@@ -603,6 +603,7 @@ function ModuleHowPanel({ step, module, onOpenProfile }) {
 function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const [selectedStepId, setSelectedStepId] = useState(steps.find((step) => step.status === 'active')?.id || steps[0]?.id || null);
   const selectedStep = steps.find((step) => step.id === selectedStepId) || steps[0];
+  const visibleSteps = steps.filter((step) => ['complete', 'active', 'blocked'].includes(step.status));
 
   return (
     <section className="panel module-sequence-panel" aria-labelledby="module-sequence-heading">
@@ -616,7 +617,7 @@ function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnsw
       {steps.length > 0 ? (
         <>
           <div className="path-list module-step-list" aria-label={`${module.name} steps`}>
-            {steps.filter((step) => ['complete', 'active', 'blocked'].includes(step.status)).map((step) => (
+            {(visibleSteps.length > 0 ? visibleSteps : steps).map((step) => (
               <button
                 key={step.id}
                 type="button"
@@ -641,41 +642,13 @@ function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnsw
               </button>
             ))}
           </div>
-          <details className="sequence-detail-disclosure" id="selected-module-step-detail">
-            <summary>Show all steps and selected detail</summary>
-            <div className="path-list all-step-list" aria-label={`${module.name} all released steps`}>
-              {steps.map((step) => (
-                <button
-                  key={`all-${step.id}`}
-                  type="button"
-                  className={`path-step status-${step.status} ${selectedStep?.id === step.id ? 'is-selected' : ''}`}
-                  aria-pressed={selectedStep?.id === step.id}
-                  onClick={() => setSelectedStepId(step.id)}
-                >
-                  <div className="path-marker">
-                    {step.status === 'complete' ? <CheckCircle2 size={17} aria-hidden="true" /> : step.id}
-                  </div>
-                  <div>
-                    <div className="path-title-row">
-                      <h3>{step.title}</h3>
-                      <span className="station-badge">Station: {step.station}</span>
-                    </div>
-                    <p>{step.duration} / {step.owner}</p>
-                  </div>
-                  <StatusPill tone={step.status === 'active' ? 'blue' : step.status === 'blocked' ? 'red' : step.status === 'complete' ? 'green' : 'neutral'}>
-                    {step.status}
-                  </StatusPill>
-                </button>
-              ))}
-            </div>
-            <StepDetailPanel
-              step={selectedStep}
-              onAddNote={onAddNote}
-              onAskExpert={onAskExpert}
-              onSaveAnswerNote={onSaveAnswerNote}
-              onOpenProfile={onOpenProfile}
-            />
-          </details>
+          <StepDetailPanel
+            step={selectedStep}
+            onAddNote={onAddNote}
+            onAskExpert={onAskExpert}
+            onSaveAnswerNote={onSaveAnswerNote}
+            onOpenProfile={onOpenProfile}
+          />
         </>
       ) : (
         <div className="empty-module-state">
