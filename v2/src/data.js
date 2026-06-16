@@ -1,5 +1,5 @@
 export const procedure = {
-  id: 'TSK-PROC-047',
+  id: 'TSK-2024-047',
   title: 'Hydraulic Power Unit Test Stand',
   customer: 'U.S. Navy',
   unit: 'HPU-047 / Bay 3',
@@ -72,7 +72,7 @@ export const buildModules = [
     master: 'E. Falkowski',
     steps: [22],
     plm: {
-      drawing: 'TSK-047-FRM-100 chassis weldment',
+      drawing: 'TSK-2024-047-FRM-100 chassis weldment',
       rev: 'Rev B',
       status: 'Released',
       spec: 'Base frame, isolation mounts, drip containment, shop-floor datum controls',
@@ -95,7 +95,7 @@ export const buildModules = [
     master: 'R. Thompson',
     steps: [22, 23, 24],
     plm: {
-      drawing: 'TSK-047-HPU-240 manifold and pressure test package',
+      drawing: 'TSK-2024-047-HPU-240 manifold and pressure test package',
       rev: 'Rev C',
       status: 'Released',
       spec: 'Closed-loop 150 percent pressure decay test with calibrated gauge chain',
@@ -118,7 +118,7 @@ export const buildModules = [
     master: 'M. Chen',
     steps: [],
     plm: {
-      drawing: 'TSK-047-FLD-310 filtration skid',
+      drawing: 'TSK-2024-047-FLD-310 filtration skid',
       rev: 'Rev A',
       status: 'Released',
       spec: 'Temperature conditioning, filtration, and leak-check loop',
@@ -140,7 +140,7 @@ export const buildModules = [
     master: 'K. Williams',
     steps: [25],
     plm: {
-      drawing: 'TSK-047-PWR-420 Zone B termination',
+      drawing: 'TSK-2024-047-PWR-420 Zone B termination',
       rev: 'Rev D pending ECO',
       status: 'Engineering hold',
       spec: 'Signal/power separation, cabinet grounding, released schematic match',
@@ -162,7 +162,7 @@ export const buildModules = [
     master: 'J. Patel',
     steps: [26],
     plm: {
-      drawing: 'TSK-047-CTL-500 PXI chassis baseline',
+      drawing: 'TSK-2024-047-CTL-500 PXI chassis baseline',
       rev: 'Rev B',
       status: 'Released',
       spec: 'NI PXI chassis, FPGA timing, closed-loop command verification',
@@ -207,7 +207,7 @@ export const buildModules = [
     master: 'S. Reyes',
     steps: [],
     plm: {
-      drawing: 'TSK-047-CON-700 dual touchscreen console',
+      drawing: 'TSK-2024-047-CON-700 dual touchscreen console',
       rev: 'Rev A',
       status: 'Released',
       spec: 'Industrial PC, dual touchscreen, ruggedized enclosure',
@@ -229,7 +229,7 @@ export const buildModules = [
     master: 'K. Williams',
     steps: [],
     plm: {
-      drawing: 'TSK-047-TPS-800 UUT cabling kit',
+      drawing: 'TSK-2024-047-TPS-800 UUT cabling kit',
       rev: 'Draft B',
       status: 'Customer-specific',
       spec: 'Test Program Set, UUT cabling, MIL-1553 path validation',
@@ -316,7 +316,7 @@ export const technicianSteps = [
     owner: 'M. Chen',
     status: 'active',
     duration: '75 min planned',
-    dependencies: ['Steps 22-23 complete', 'Calibrated gauge cert attached', 'QA witness assigned'],
+    dependencies: ['Step 22 complete', 'Step 23 complete', 'QA witness assigned'],
     evidence: ['Pressure chart', 'Gauge serial number', 'QA initials', 'Hold time reading'],
     guidance:
       'Follow the released pressure ramp sequence. Do not advance if pressure drop exceeds acceptance band or if gauge certificate is expired.',
@@ -455,7 +455,7 @@ export const technicianProfiles = [
     techniciansTrained: 10,
     buildsShaped: ['FAT readiness program', 'Hydraulic Power Unit Test Stand'],
     legacyLine: 'Protects the official procedure by validating field tips before release.',
-    signatureMethods: ['Technique endorsement', 'Phase-gate signoff', 'QA-ready evidence reviews'],
+    signatureMethods: ['Technique endorsement', 'Module-gate signoff', 'QA-ready evidence reviews'],
   },
   {
     name: 'M. Chen',
@@ -656,6 +656,17 @@ export const workstreams = [
     blocked: false,
     next: 'Verify digital input map',
     evidence: ['program hash'],
+  },
+  {
+    name: 'ADAS 2.0 Retrofit - Legacy Navy Hydraulic Stand',
+    owner: 'A. Morgan',
+    experience: '6 months',
+    progress: 42,
+    activeStep: 'Instrumentation interface mapping',
+    blocked: false,
+    next: 'Senior tech approval against 1998 stand notes',
+    evidence: ['legacy drawing', 'signal map'],
+    legacy: 'Built 1998 / original team retired / captured knowledge here',
   },
 ];
 
@@ -1011,7 +1022,7 @@ export const seniorCaptureDrafts = [
     title: 'Bleed-down sequence for trapped hydraulic pressure',
     source: 'Video walkthrough',
     status: 'Ready for senior tech review',
-    linkedProcedure: 'TSK-PROC-047 step 24',
+    linkedProcedure: 'TSK-2024-047 step 24',
     transcript:
       'Open the low-point return valve first, watch for pressure creep, then verify the gauge returns to zero before loosening the manifold plug.',
     aiDraft:
@@ -1061,7 +1072,7 @@ export const validationQueue = [
 export const adminSignals = [
   { label: 'Open procedures', value: '7', detail: '3 with active blockers' },
   { label: 'Evidence packets', value: '42', detail: '5 awaiting QA witness' },
-  { label: 'Vault drafts', value: '14', detail: '8 from senior tech capture' },
+  { label: 'Legacy drafts', value: '14', detail: '8 from senior tech capture' },
   { label: 'Reuse rate', value: '64%', detail: 'modules cited this month' },
 ];
 
@@ -1111,20 +1122,20 @@ export const meetingContext = [
   },
   {
     label: 'Product posture',
-    detail: 'Position as a packaged Knowledge Vault module, while tomorrow’s call may open a separate production scheduling pitch.',
+    detail: 'Position as a packaged build-and-legacy module, while tomorrow’s call may open a separate production scheduling pitch.',
   },
 ];
 
 export const integrationTargets = [
-  { name: 'PDM Vault', status: 'Phase 1 rollout', detail: 'Released CAD, revision control, approval workflow' },
-  { name: 'PLM', status: 'Phase 2 design', detail: 'Engineering metadata, related documents, BOM handoff' },
+  { name: 'PDM', status: 'Module 1 rollout', detail: 'Released CAD, revision control, approval workflow' },
+  { name: 'PLM', status: 'Module 2 design', detail: 'Engineering metadata, related documents, BOM handoff' },
   { name: 'Epicor ERP', status: 'Downstream system', detail: 'BOMs, production schedule, inventory visibility gaps' },
   { name: 'SQL File Index', status: 'Existing internal tool', detail: 'Legacy file/path discovery and engineer-led cleansing' },
 ];
 
 export const questionnairePrompts = [
   'Which document types should be eligible for vault citation on day one?',
-  'Where should approved procedure revisions live: PDM, PLM, or the Knowledge Vault with PLM reference?',
+  'Where should approved procedure revisions live: PDM, PLM, or the build-and-legacy layer with PLM reference?',
   'Which steps require QA witness, engineering disposition, or supervisor-only signoff?',
   'What is the minimum evidence packet for FAT readiness?',
   'Which legacy projects are safe pilot candidates for similarity search?',

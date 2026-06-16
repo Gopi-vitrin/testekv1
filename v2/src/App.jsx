@@ -80,7 +80,7 @@ function ShellHeader({ activeView, setActiveView }) {
       <div className="brand-lockup">
         <img src={testekLogo} alt="Testek Solutions" />
         <div>
-          <strong>TESTEK · VAULT</strong>
+          <strong>TESTEK · BUILD</strong>
           <span>Aerospace test equipment lifecycle platform</span>
         </div>
       </div>
@@ -308,14 +308,28 @@ function KnowledgeLayer({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
 
 function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const defaultModuleId = procedure.assignedModuleId || buildModules.find((module) => module.status === 'active')?.id || buildModules[0].id;
+  const defaultBuildId = buildProjects.find((build) => build.assignedModuleId === defaultModuleId)?.id || buildProjects[0].id;
+  const [selectedBuildId, setSelectedBuildId] = useState(defaultBuildId);
   const [selectedModuleId, setSelectedModuleId] = useState(defaultModuleId);
+  const activeBuild = buildProjects.find((build) => build.id === selectedBuildId) || buildProjects[0];
   const selectedModule = buildModules.find((module) => module.id === selectedModuleId) || buildModules[0];
-  const activeBuild = buildProjects.find((build) => build.id === selectedModule.buildId) || buildProjects[0];
   const moduleSteps = selectedModule.steps
     .map((stepId) => steps.find((step) => step.id === stepId))
     .filter(Boolean);
   const allModuleSteps = moduleSteps.length > 0 ? moduleSteps : steps.filter((step) => step.moduleId === selectedModule.id);
   const activeStep = allModuleSteps.find((step) => step.status === 'active') || allModuleSteps[0] || null;
+  function selectBuild(buildId) {
+    const build = buildProjects.find((item) => item.id === buildId);
+    if (!build) return;
+    setSelectedBuildId(build.id);
+    setSelectedModuleId(build.assignedModuleId);
+  }
+  function selectModule(moduleId) {
+    const module = buildModules.find((item) => item.id === moduleId);
+    if (!module) return;
+    setSelectedModuleId(module.id);
+    setSelectedBuildId(module.buildId);
+  }
 
   return (
     <>
@@ -331,15 +345,17 @@ function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
         </div>
       </PageHeader>
 
+      <BuildProjectSwitch activeBuildId={activeBuild.id} onSelect={selectBuild} />
+
       <section className="role-grid technician-grid">
         <div className="primary-stack">
           {activeStep ? (
             <>
               <CurrentStepCard step={activeStep} module={selectedModule} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
               <ModulePathStrip
-                modules={buildModules.filter((item) => item.buildId === activeBuild.id).slice(0, 4)}
+                modules={buildModules}
                 selectedModuleId={selectedModule.id}
-                onSelect={setSelectedModuleId}
+                onSelect={selectModule}
               />
               <ShiftHandoffStrip step={activeStep} />
             </>
@@ -347,9 +363,9 @@ function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
             <>
               <ModulePendingCard module={selectedModule} />
               <ModulePathStrip
-                modules={buildModules.filter((item) => item.buildId === activeBuild.id).slice(0, 4)}
+                modules={buildModules}
                 selectedModuleId={selectedModule.id}
-                onSelect={setSelectedModuleId}
+                onSelect={selectModule}
               />
             </>
           )}
@@ -364,15 +380,35 @@ function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
   );
 }
 
+function BuildProjectSwitch({ activeBuildId, onSelect }) {
+  return (
+    <section className="project-switch" aria-label="Active project">
+      {buildProjects.map((build) => (
+        <button
+          key={build.id}
+          type="button"
+          className={build.id === activeBuildId ? 'is-selected' : ''}
+          aria-pressed={build.id === activeBuildId}
+          onClick={() => onSelect(build.id)}
+        >
+          <strong>{build.id}</strong>
+          <span>{build.title}</span>
+          {build.type === 'retrofit' && <small>Built {build.originalYear} / original team retired</small>}
+        </button>
+      ))}
+    </section>
+  );
+}
+
 function ModulePathStrip({ modules, selectedModuleId, onSelect }) {
   return (
     <section className="panel module-path-strip" aria-labelledby="module-path-strip-heading">
       <div className="section-heading compact-heading">
         <div>
           <span className="eyebrow">Module path</span>
-          <h2 id="module-path-strip-heading">Build phases</h2>
+          <h2 id="module-path-strip-heading">Modules</h2>
         </div>
-        <span className="step-count">{modules.length} visible</span>
+        <span className="step-count">{modules.length} modules</span>
       </div>
       <div className="module-phase-row" aria-label="Build modules">
         {modules.map((module) => (
@@ -385,7 +421,7 @@ function ModulePathStrip({ modules, selectedModuleId, onSelect }) {
           >
             <span>{module.order}</span>
             <strong>{module.name}</strong>
-            <small>{module.station}</small>
+            <small>Station: {module.station}</small>
           </button>
         ))}
       </div>
@@ -580,7 +616,7 @@ function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnsw
       {steps.length > 0 ? (
         <>
           <div className="path-list module-step-list" aria-label={`${module.name} steps`}>
-            {steps.map((step) => (
+            {steps.filter((step) => ['complete', 'active', 'blocked'].includes(step.status)).map((step) => (
               <button
                 key={step.id}
                 type="button"
@@ -595,7 +631,7 @@ function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnsw
                 <div>
                   <div className="path-title-row">
                     <h3>{step.title}</h3>
-                    <span className="station-badge">{step.station}</span>
+                    <span className="station-badge">Station: {step.station}</span>
                   </div>
                   <p>{step.duration} / {step.owner}</p>
                 </div>
@@ -606,7 +642,32 @@ function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnsw
             ))}
           </div>
           <details className="sequence-detail-disclosure" id="selected-module-step-detail">
-            <summary>View selected step details</summary>
+            <summary>Show all steps and selected detail</summary>
+            <div className="path-list all-step-list" aria-label={`${module.name} all released steps`}>
+              {steps.map((step) => (
+                <button
+                  key={`all-${step.id}`}
+                  type="button"
+                  className={`path-step status-${step.status} ${selectedStep?.id === step.id ? 'is-selected' : ''}`}
+                  aria-pressed={selectedStep?.id === step.id}
+                  onClick={() => setSelectedStepId(step.id)}
+                >
+                  <div className="path-marker">
+                    {step.status === 'complete' ? <CheckCircle2 size={17} aria-hidden="true" /> : step.id}
+                  </div>
+                  <div>
+                    <div className="path-title-row">
+                      <h3>{step.title}</h3>
+                      <span className="station-badge">Station: {step.station}</span>
+                    </div>
+                    <p>{step.duration} / {step.owner}</p>
+                  </div>
+                  <StatusPill tone={step.status === 'active' ? 'blue' : step.status === 'blocked' ? 'red' : step.status === 'complete' ? 'green' : 'neutral'}>
+                    {step.status}
+                  </StatusPill>
+                </button>
+              ))}
+            </div>
             <StepDetailPanel
               step={selectedStep}
               onAddNote={onAddNote}
@@ -856,9 +917,13 @@ function CurrentStepCard({ step, module, onAddNote, onAskExpert, onSaveAnswerNot
           ))}
         </div>
       </details>
-      <button type="button" className="primary-action" onClick={() => setEvidenceSent(true)} disabled={!evidenceReady}>
+      <button type="button" className="secondary-action proof-action" onClick={() => setEvidenceSent(true)} disabled={!evidenceReady}>
         <CheckCircle2 size={18} aria-hidden="true" />
-        {evidenceSent ? 'Evidence sent' : evidenceReady ? 'Submit proof' : 'Attach required proof'}
+        {evidenceSent ? 'Proof attached' : evidenceReady ? 'Attach proof' : 'Select required proof'}
+      </button>
+      <button type="button" className="advance-action" disabled={!evidenceSent}>
+        <CheckCircle2 size={19} aria-hidden="true" />
+        {evidenceSent ? 'Complete step and advance' : 'Complete 3 checks to advance'}
       </button>
       {evidenceSent && <p className="sent-state" role="status">Sent to QA witness and senior tech.</p>}
     </section>
@@ -899,7 +964,7 @@ function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
                 <span className="station-badge">{step.station}</span>
               </div>
               <p>
-                Phase: {step.workstream} / {step.duration}
+                Module: {step.workstream} / {step.duration}
                 {step.completedBy ? ` / built by ${step.completedBy}` : ''}
               </p>
             </div>
@@ -924,9 +989,9 @@ function StationPhaseContext({ step }) {
   const station = stationMeta[step.station] || {};
 
   return (
-    <div className="station-phase-context" aria-label="Active phase and station">
+    <div className="station-phase-context" aria-label="Active module and station">
       <div>
-        <span>Current phase</span>
+        <span>Current module</span>
         <strong>{step.workstream}</strong>
       </div>
       <div>
@@ -1283,7 +1348,7 @@ function AdvisorKnowledgeReview({ steps, onEndorseNote, onAnswerQuestion }) {
 
 function AdvisorCaptureForm({ onSubmit }) {
   const [mode, setMode] = useState('Voice note');
-  const [linkedStep, setLinkedStep] = useState('TSK-PROC-047 / Step 24');
+  const [linkedStep, setLinkedStep] = useState('TSK-2024-047 / Step 24');
   const [title, setTitle] = useState('Pressure decay test acceptance cue');
   const [detail, setDetail] = useState('If the return line warms before pressure stabilizes, verify bypass valve position before replacing the transducer.');
   const [statusMessage, setStatusMessage] = useState('');
@@ -1487,7 +1552,7 @@ function AdminView({ steps }) {
     <>
       <PageHeader
         eyebrow="Operations"
-        title="Vault and build status"
+        title="Build and legacy status"
       >
         <div className="header-metrics">
           <Metric value="47" label="Top citations" detail="R. Thompson" />
@@ -1497,17 +1562,19 @@ function AdminView({ steps }) {
       </PageHeader>
 
       <section className="admin-layout">
+        <div className="admin-hero">
+          <ProjectStatusBoard steps={steps} />
+        </div>
         <div className="admin-column admin-rail">
           <SystemHealthBoard />
+          <AdminRiskBoard />
           <AdminAdoptionBoard />
-          <AdvisorContributionBoard />
-          <PendingLegacyBoard />
-          <RepeatQuestionBoard />
         </div>
         <div className="admin-column admin-main">
-          <AdminRiskBoard />
-          <ProjectStatusBoard steps={steps} />
+          <AdvisorContributionBoard />
+          <PendingLegacyBoard />
           <VaultHealthBoard steps={steps} />
+          <RepeatQuestionBoard />
           <LegacyRecognitionBoard />
           <RetirementArtifactBoard />
         </div>
@@ -1736,6 +1803,7 @@ function ProjectStatusBoard({ steps }) {
                   ? `${blockedStep.identifiedBy} identified an issue at Step ${blockedStep.id}`
                   : project.activeStep}
               </p>
+              {project.legacy && <p className="legacy-project-line">{project.legacy}</p>}
             </div>
             <div>
               <strong>{project.owner}</strong>
