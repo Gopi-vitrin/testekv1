@@ -20,14 +20,19 @@ import {
 import testekLogo from './assets/testek-logo.png';
 import {
   advisorQuestions,
+  advisorContributions,
   advisorRecruits,
+  adminAdoptionSignals,
   adminRiskSignals,
+  buildModules,
+  buildProjects,
   intakeItems,
   legacyTechniques,
   conversationCaptures,
   procedure,
   recognitionLeaders,
   retirementRecords,
+  repeatQuestionSignals,
   reusableModules,
   seniorCaptureDrafts,
   stationMeta,
@@ -75,9 +80,14 @@ function ShellHeader({ activeView, setActiveView }) {
       <div className="brand-lockup">
         <img src={testekLogo} alt="Testek Solutions" />
         <div>
-          <strong>Legacy Platform</strong>
-          <span>Build tracker</span>
+          <strong>TESTEK · VAULT</strong>
+          <span>Aerospace test equipment lifecycle platform</span>
         </div>
+      </div>
+      <div className="header-cert-strip" aria-label="System controls">
+        <span>AS9100 Rev D</span>
+        <span>CMMC 2.0</span>
+        <span>On-prem local server</span>
       </div>
       <ModeSwitch activeView={activeView} onChange={setActiveView} />
     </header>
@@ -297,35 +307,322 @@ function KnowledgeLayer({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
 }
 
 function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
-  const activeStep = steps.find((step) => step.status === 'active');
-  const nextStep = steps.find((step) => step.status === 'blocked');
+  const defaultModuleId = procedure.assignedModuleId || buildModules.find((module) => module.status === 'active')?.id || buildModules[0].id;
+  const [selectedModuleId, setSelectedModuleId] = useState(defaultModuleId);
+  const selectedModule = buildModules.find((module) => module.id === selectedModuleId) || buildModules[0];
+  const activeBuild = buildProjects.find((build) => build.id === selectedModule.buildId) || buildProjects[0];
+  const moduleSteps = selectedModule.steps
+    .map((stepId) => steps.find((step) => step.id === stepId))
+    .filter(Boolean);
+  const allModuleSteps = moduleSteps.length > 0 ? moduleSteps : steps.filter((step) => step.moduleId === selectedModule.id);
+  const activeStep = allModuleSteps.find((step) => step.status === 'active') || allModuleSteps[0] || null;
 
   return (
     <>
       <PageHeader
-        eyebrow={`${procedure.recruit} / ${procedure.recruitExperience} experience`}
-        title="Do the next safe step"
+        eyebrow={`${procedure.recruit} / ${procedure.recruitExperience} experience / ${activeBuild.id}`}
+        title={selectedModule.name}
+        detail={`${activeBuild.customer} / ${activeBuild.type === 'retrofit' ? 'Retrofit' : 'New build'}`}
       >
         <div className="contact-card">
-          <span>Assigned senior tech</span>
+          <span>Senior tech</span>
           <strong>{procedure.assignedMentor}</strong>
-          <small>Suggested: {procedure.suggestedMentor}</small>
+          <small>Backup: {procedure.suggestedMentor}</small>
         </div>
       </PageHeader>
 
       <section className="role-grid technician-grid">
         <div className="primary-stack">
-          <CurrentStepCard step={activeStep} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
-          <ShiftHandoffStrip step={activeStep} />
-          <ProcedurePath steps={steps} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
+          {activeStep ? (
+            <>
+              <CurrentStepCard step={activeStep} module={selectedModule} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
+              <ModulePathStrip
+                modules={buildModules.filter((item) => item.buildId === activeBuild.id).slice(0, 4)}
+                selectedModuleId={selectedModule.id}
+                onSelect={setSelectedModuleId}
+              />
+              <ShiftHandoffStrip step={activeStep} />
+            </>
+          ) : (
+            <>
+              <ModulePendingCard module={selectedModule} />
+              <ModulePathStrip
+                modules={buildModules.filter((item) => item.buildId === activeBuild.id).slice(0, 4)}
+                selectedModuleId={selectedModule.id}
+                onSelect={setSelectedModuleId}
+              />
+            </>
+          )}
+          <ModuleSequencePanel module={selectedModule} steps={allModuleSteps} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
         </div>
         <aside className="assist-stack">
-          <ConversationCaptureCard step={activeStep} />
-          <StandingOnShoulders onOpenProfile={onOpenProfile} />
-          <ReusableModuleCard onOpenProfile={onOpenProfile} />
+          {activeStep && <TechnicianStepReference step={activeStep} />}
+          <ModulePlmPanel module={selectedModule} />
         </aside>
       </section>
     </>
+  );
+}
+
+function ModulePathStrip({ modules, selectedModuleId, onSelect }) {
+  return (
+    <section className="panel module-path-strip" aria-labelledby="module-path-strip-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Module path</span>
+          <h2 id="module-path-strip-heading">Build phases</h2>
+        </div>
+        <span className="step-count">{modules.length} visible</span>
+      </div>
+      <div className="module-phase-row" aria-label="Build modules">
+        {modules.map((module) => (
+          <button
+            key={module.id}
+            type="button"
+            className={`module-phase status-${module.status} ${module.id === selectedModuleId ? 'is-selected' : ''}`}
+            aria-pressed={module.id === selectedModuleId}
+            onClick={() => onSelect(module.id)}
+          >
+            <span>{module.order}</span>
+            <strong>{module.name}</strong>
+            <small>{module.station}</small>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TechnicianStepReference({ step }) {
+  const [mode, setMode] = useState('Text');
+  const [source, setSource] = useState(procedure.assignedMentor);
+  const [summary, setSummary] = useState('');
+  const [sent, setSent] = useState(false);
+  const note = (step.techniqueNotes || []).find((item) => item.named || item.endorsed) || step.techniqueNotes?.[0];
+  const citationText = note?.citations
+    ? `${note.citations.buildCount} builds / ${note.citations.customers.length} customers`
+    : note?.appliedAcrossBuilds
+      ? `${note.appliedAcrossBuilds} builds`
+      : null;
+
+  function submitCapture(event) {
+    event.preventDefault();
+    if (mode === 'Text' && !summary.trim()) return;
+    setSent(true);
+  }
+
+  return (
+    <section className="panel technician-reference-panel" aria-labelledby="step-reference-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Step reference</span>
+          <h2 id="step-reference-heading">Help for this step</h2>
+        </div>
+        <UserCheck size={20} aria-hidden="true" />
+      </div>
+
+      {note && (
+        <article className="method-summary">
+          <span>Validated method</span>
+          <strong>{note.name || 'Approved technique'}</strong>
+          <small>{citationText || 'Validated field note'}</small>
+        </article>
+      )}
+
+      <details className="capture-disclosure">
+        <summary>
+          <FileText size={15} aria-hidden="true" />
+          Capture senior note
+        </summary>
+        <form className="capture-form compact-capture-form" onSubmit={submitCapture}>
+          <div className="capture-toggle" role="group" aria-label="Capture format">
+            {['Text', 'Voice'].map((item) => (
+              <button key={item} type="button" className={mode === item ? 'active' : ''} onClick={() => setMode(item)}>
+                {item === 'Voice' ? <Mic size={15} aria-hidden="true" /> : <FileText size={15} aria-hidden="true" />}
+                {item}
+              </button>
+            ))}
+          </div>
+          <label htmlFor="tech-reference-source">Source</label>
+          <input id="tech-reference-source" value={source} onChange={(event) => setSource(event.target.value)} />
+          {mode === 'Voice' ? (
+            <div className="voice-reply-box">
+              <Mic size={16} aria-hidden="true" />
+              <span>Voice note ready</span>
+            </div>
+          ) : (
+            <>
+              <label htmlFor="tech-reference-note">Note</label>
+              <textarea
+                id="tech-reference-note"
+                rows="3"
+                value={summary}
+                onChange={(event) => {
+                  setSummary(event.target.value);
+                  setSent(false);
+                }}
+                placeholder="Capture what the senior tech told you."
+              />
+            </>
+          )}
+          <button type="submit" className="primary-action" disabled={mode === 'Text' && !summary.trim()}>
+            <Send size={15} aria-hidden="true" />
+            Send for approval
+          </button>
+        </form>
+      </details>
+      {sent && <p className="sent-state">Waiting for {source} approval / Step {step.id}</p>}
+    </section>
+  );
+}
+
+function ModuleOverviewCard({ module, build }) {
+  return (
+    <section className="panel module-overview-card" aria-labelledby="module-overview-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">{build.id} / Module {module.order}</span>
+          <h2 id="module-overview-heading">{module.name}</h2>
+          <p>{module.plm.spec}</p>
+        </div>
+        <StatusPill tone={module.status === 'active' ? 'blue' : module.status === 'blocked' ? 'red' : module.status === 'complete' ? 'green' : 'neutral'}>
+          {module.status}
+        </StatusPill>
+      </div>
+      {module.reusedFrom && (
+        <div className="reuse-lineage">
+          <strong>{module.reusedFrom.pct}% reused from {module.reusedFrom.buildId}</strong>
+          <span>Authored by {module.reusedFrom.author}</span>
+          <ul>{module.reusedFrom.changed.map((item) => <li key={item}>{item}</li>)}</ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ModulePendingCard({ module }) {
+  return (
+    <section className="panel module-pending-card" aria-labelledby="module-pending-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Module staged</span>
+          <h2 id="module-pending-heading">{module.name}</h2>
+          <p>Waiting on released floor steps.</p>
+        </div>
+        <StatusPill tone="neutral">{module.status}</StatusPill>
+      </div>
+    </section>
+  );
+}
+
+function ModulePlmPanel({ module }) {
+  return (
+    <section className="panel plm-panel" aria-labelledby="plm-panel-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">PLM</span>
+          <h2 id="plm-panel-heading">{module.plm.rev} / {module.plm.status}</h2>
+        </div>
+        <FileCheck2 size={20} aria-hidden="true" />
+      </div>
+      <div className="drawing-card">
+        <span>Drawing</span>
+        <strong>{module.plm.drawing}</strong>
+      </div>
+      <div className="plm-spec">
+        <strong>Spec</strong>
+        <p>{module.plm.spec}</p>
+      </div>
+      <details className="bom-disclosure">
+        <summary>BOM / {module.plm.bom.length} items</summary>
+        <div className="bom-list" aria-label="Module bill of materials">
+          {module.plm.bom.map((item) => (
+            <article key={item.part}>
+              <span>{item.part}</span>
+              <strong>Qty {item.qty}</strong>
+            </article>
+          ))}
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function ModuleHowPanel({ step, module, onOpenProfile }) {
+  return (
+    <section className="panel module-how-panel" aria-labelledby="module-how-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Senior method</span>
+          <h2 id="module-how-heading">{module.master || procedure.assignedMentor}</h2>
+        </div>
+        <UserCheck size={20} aria-hidden="true" />
+      </div>
+      <p className="module-how-lead">Step {step.id}: {step.title}</p>
+      <KnowledgeLayer step={step} onOpenProfile={onOpenProfile} compact />
+    </section>
+  );
+}
+
+function ModuleSequencePanel({ module, steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
+  const [selectedStepId, setSelectedStepId] = useState(steps.find((step) => step.status === 'active')?.id || steps[0]?.id || null);
+  const selectedStep = steps.find((step) => step.id === selectedStepId) || steps[0];
+
+  return (
+    <section className="panel module-sequence-panel" aria-labelledby="module-sequence-heading">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">{module.name}</span>
+          <h2 id="module-sequence-heading">Build sequence</h2>
+        </div>
+        <span className="step-count">{steps.length || 0} released steps</span>
+      </div>
+      {steps.length > 0 ? (
+        <>
+          <div className="path-list module-step-list" aria-label={`${module.name} steps`}>
+            {steps.map((step) => (
+              <button
+                key={step.id}
+                type="button"
+                className={`path-step status-${step.status} ${selectedStep?.id === step.id ? 'is-selected' : ''}`}
+                aria-pressed={selectedStep?.id === step.id}
+                aria-describedby="selected-module-step-detail"
+                onClick={() => setSelectedStepId(step.id)}
+              >
+                <div className="path-marker">
+                  {step.status === 'complete' ? <CheckCircle2 size={17} aria-hidden="true" /> : step.id}
+                </div>
+                <div>
+                  <div className="path-title-row">
+                    <h3>{step.title}</h3>
+                    <span className="station-badge">{step.station}</span>
+                  </div>
+                  <p>{step.duration} / {step.owner}</p>
+                </div>
+                <StatusPill tone={step.status === 'active' ? 'blue' : step.status === 'blocked' ? 'red' : step.status === 'complete' ? 'green' : 'neutral'}>
+                  {step.status}
+                </StatusPill>
+              </button>
+            ))}
+          </div>
+          <details className="sequence-detail-disclosure" id="selected-module-step-detail">
+            <summary>View selected step details</summary>
+            <StepDetailPanel
+              step={selectedStep}
+              onAddNote={onAddNote}
+              onAskExpert={onAskExpert}
+              onSaveAnswerNote={onSaveAnswerNote}
+              onOpenProfile={onOpenProfile}
+            />
+          </details>
+        </>
+      ) : (
+        <div className="empty-module-state">
+          <strong>Steps not released to the floor yet</strong>
+          <p>Waiting on released floor steps.</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -386,8 +683,8 @@ function ConversationCaptureCard({ step }) {
     <section className="panel conversation-capture-card" aria-labelledby="conversation-capture-heading">
       <div className="section-heading compact-heading">
         <div>
-          <span className="eyebrow">Conversation capture</span>
-          <h2 id="conversation-capture-heading">Credit the senior tech</h2>
+          <span className="eyebrow">Capture</span>
+          <h2 id="conversation-capture-heading">Senior input</h2>
         </div>
         <Mic size={20} aria-hidden="true" />
       </div>
@@ -400,20 +697,20 @@ function ConversationCaptureCard({ step }) {
             </button>
           ))}
         </div>
-        <label htmlFor="capture-senior">Senior tech</label>
+        <label htmlFor="capture-senior">Source</label>
         <input id="capture-senior" value={seniorTech} onChange={(event) => setSeniorTech(event.target.value)} />
-        <label htmlFor="capture-summary">What they told you</label>
+        <label htmlFor="capture-summary">Note</label>
         {mode === 'Voice' ? (
           <div className="voice-reply-box">
             <Mic size={18} aria-hidden="true" />
-            <span>Voice summary staged for {seniorTech} approval</span>
+            <span>Voice note ready for {seniorTech}</span>
           </div>
         ) : (
           <textarea id="capture-summary" rows="4" value={summary} onChange={(event) => setSummary(event.target.value)} />
         )}
         <button type="submit" className="primary-action" disabled={mode === 'Text' && !summary.trim()}>
           <Send size={16} aria-hidden="true" />
-          Send for senior approval
+          Send for approval
         </button>
       </form>
       {sent && <p className="sent-state">Waiting for {seniorTech} approval / Step {step.id}</p>}
@@ -458,10 +755,10 @@ function StandingOnShoulders({ onOpenProfile }) {
   );
 }
 
-function ReusableModuleCard({ onOpenProfile }) {
+function ReusableModuleCard({ module: selectedModule, onOpenProfile }) {
   const [moduleUsage, setModuleUsage] = useState(reusableModules[0].reuseCount);
   const [cited, setCited] = useState(false);
-  const module = reusableModules[0];
+  const reusableModule = reusableModules.find((item) => item.station === selectedModule.station) || reusableModules[0];
 
   function citeModule() {
     if (cited) return;
@@ -473,48 +770,80 @@ function ReusableModuleCard({ onOpenProfile }) {
     <section className="panel module-card" aria-labelledby="module-heading">
       <div className="section-heading compact-heading">
         <div>
-          <span className="eyebrow">Reusable module</span>
-          <h2 id="module-heading">{module.name}</h2>
+          <span className="eyebrow">Reuse</span>
+          <h2 id="module-heading">{reusableModule.name}</h2>
         </div>
         <Database size={20} aria-hidden="true" />
       </div>
-      <p>Reused on {moduleUsage} builds / {module.customers.length} customers</p>
+      <p>Reused on {moduleUsage} builds / {reusableModule.customers.length} customers</p>
       <div className="module-actions">
         <button type="button" className="method-action method-primary" onClick={citeModule} disabled={cited}>
           {cited ? 'Citation added' : 'Reuse module'}
         </button>
-        <button type="button" className="method-action method-secondary" onClick={() => onOpenProfile?.(module.author)}>
-          {module.author}
+        <button type="button" className="method-action method-secondary" onClick={() => onOpenProfile?.(reusableModule.author)}>
+          {reusableModule.author}
         </button>
       </div>
     </section>
   );
 }
 
-function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
+function CurrentStepCard({ step, module, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const [evidenceSent, setEvidenceSent] = useState(false);
+  const [checkedEvidence, setCheckedEvidence] = useState({});
+  const evidenceItems = step.evidence || [];
+  const dependencies = step.dependencies || ['Previous module step complete', 'Released PLM package matches build bay'];
+  const evidenceReady = evidenceItems.length > 0 && evidenceItems.every((item) => checkedEvidence[item]);
+  const guidance = step.guidance || 'Follow the released procedure. Do not advance if PLM revision, station handoff, or evidence does not match.';
+  const [actionCopy, stopCopyRaw] = guidance.split(/\. Do not advance/i);
+  const stopCopy = stopCopyRaw ? `Do not advance${stopCopyRaw}` : 'Do not advance if PLM revision, station handoff, or evidence does not match.';
+  const shortTitle = step.title.replace(' at 150 percent rated pressure', '');
+  const stepDetail = step.title === shortTitle ? step.station : `${step.station} / 150 percent rated pressure`;
 
   return (
     <section className="panel current-step" aria-labelledby="current-step-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Do this now</span>
-          <h2 id="current-step-heading">Step {step.id}: {step.title}</h2>
-          <p className="station-line">Station: {step.station} / Master: {stationMeta[step.station]?.master}</p>
+          <span className="eyebrow">Do now</span>
+          <h2 id="current-step-heading">Step {step.id}: {shortTitle}</h2>
+          <p className="station-line">{stepDetail}</p>
         </div>
         <StatusPill tone="blue">Active</StatusPill>
       </div>
-      <p className="instruction">{step.guidance}</p>
-      <div className="action-block">
-        <h3>Required before advance</h3>
-        <ul>
-          {step.dependencies.map((item) => <li key={item}>{item}</li>)}
-        </ul>
+      <div className="do-now-focus">
+        <div>
+          <span>Action</span>
+          <p>{actionCopy}.</p>
+        </div>
+        <div>
+          <span>Hold point</span>
+          <p>{stopCopy}</p>
+        </div>
       </div>
-      <div className="evidence-grid" aria-label="Evidence required">
-        {step.evidence.map((item) => (
-          <span key={item}><ClipboardCheck size={15} aria-hidden="true" /> {item}</span>
-        ))}
+      <div className="do-now-body">
+        <div className="do-now-list">
+          <h3>Before advance</h3>
+          {dependencies.map((item) => (
+            <div key={item}>
+              <CheckCircle2 size={15} aria-hidden="true" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+        <div className="do-now-list proof-list" aria-label="Evidence required">
+          <h3>Required proof</h3>
+          {evidenceItems.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className={checkedEvidence[item] ? 'is-checked' : ''}
+              aria-pressed={Boolean(checkedEvidence[item])}
+              onClick={() => setCheckedEvidence((current) => ({ ...current, [item]: !current[item] }))}
+            >
+              <ClipboardCheck size={15} aria-hidden="true" /> {item}
+            </button>
+          ))}
+        </div>
       </div>
       <details className="inline-disclosure">
         <summary>Quality guardrails for this step</summary>
@@ -527,16 +856,9 @@ function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
           ))}
         </div>
       </details>
-      <KnowledgeLayer
-        step={step}
-        onAddNote={onAddNote}
-        onAskExpert={onAskExpert}
-        onSaveAnswerNote={onSaveAnswerNote}
-        onOpenProfile={onOpenProfile}
-      />
-      <button type="button" className="primary-action" onClick={() => setEvidenceSent(true)}>
+      <button type="button" className="primary-action" onClick={() => setEvidenceSent(true)} disabled={!evidenceReady}>
         <CheckCircle2 size={18} aria-hidden="true" />
-        {evidenceSent ? 'Evidence sent for review' : 'Submit evidence for review'}
+        {evidenceSent ? 'Evidence sent' : evidenceReady ? 'Submit proof' : 'Attach required proof'}
       </button>
       {evidenceSent && <p className="sent-state" role="status">Sent to QA witness and senior tech.</p>}
     </section>
@@ -842,19 +1164,26 @@ function AdvisorView({ steps, onEndorseNote, onAnswerQuestion }) {
     <>
       <PageHeader
         eyebrow="Senior Tech"
-        title="Build your body of work"
+        title="Senior tech workspace"
       >
         <div className="header-metrics">
           <Metric value="3" label="Assigned recruits" />
-          <Metric value={2 + textEntries.length} label="Legacy items ready" tone="blue" />
+          <Metric value={2 + textEntries.length} label="Approvals ready" tone="blue" />
         </div>
       </PageHeader>
 
       <section className="role-grid advisor-grid">
         <SeniorLegacyRecord />
-        <AdvisorCaptureForm onSubmit={handleSubmit} />
-        <LegacyApprovalInbox />
-        <RecruitQueue />
+        <div className="advisor-columns">
+          <div className="advisor-column">
+            <AdvisorCaptureForm onSubmit={handleSubmit} />
+            <RecruitQueue />
+          </div>
+          <div className="advisor-column">
+            <LegacyApprovalInbox />
+            <AdvisorKnowledgeReview steps={steps} onEndorseNote={onEndorseNote} onAnswerQuestion={onAnswerQuestion} />
+          </div>
+        </div>
       </section>
     </>
   );
@@ -865,12 +1194,12 @@ function SeniorLegacyRecord() {
     <section className="panel senior-legacy-record" aria-labelledby="senior-legacy-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Your career record</span>
-          <h2 id="senior-legacy-heading">E. Falkowski's body of work</h2>
+          <span className="eyebrow">Record</span>
+          <h2 id="senior-legacy-heading">E. Falkowski</h2>
         </div>
         <StatusPill tone="blue">26 years</StatusPill>
       </div>
-      <p className="legacy-record-line">Your hydraulic acceptance judgment is now cited across active HPU builds.</p>
+      <p className="legacy-record-line">31 citations across active HPU builds.</p>
       <div className="legacy-metric-row compact">
         <span>31 citations</span>
         <span>17 techs trained</span>
@@ -906,8 +1235,8 @@ function AdvisorKnowledgeReview({ steps, onEndorseNote, onAnswerQuestion }) {
     <section className="panel knowledge-review-panel" aria-labelledby="knowledge-review-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Legacy loop</span>
-          <h2 id="knowledge-review-heading">Approve into body of work</h2>
+          <span className="eyebrow">Questions</span>
+          <h2 id="knowledge-review-heading">Answer recruits</h2>
         </div>
       </div>
       <div className="review-list">
@@ -921,11 +1250,11 @@ function AdvisorKnowledgeReview({ steps, onEndorseNote, onAnswerQuestion }) {
                   <textarea
                     value={answerText}
                     onChange={(event) => setAnswerText(event.target.value)}
-                    placeholder="Answer as the senior tech. If reused, it adds to your body of work."
+                    placeholder="Answer with the stop condition, proof needed, and who signs off."
                     rows="2"
                   />
                   <button type="button" onClick={() => submitAnswer(step.id, question.id)} disabled={!answerText.trim()}>
-                    Add to body of work
+                    Send answer
                   </button>
                 </div>
               ) : null}
@@ -977,8 +1306,8 @@ function AdvisorCaptureForm({ onSubmit }) {
     <section className="panel capture-console" aria-labelledby="capture-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Body of work</span>
-          <h2 id="capture-heading">Add to your legacy</h2>
+          <span className="eyebrow">Capture</span>
+          <h2 id="capture-heading">Add field note</h2>
         </div>
       </div>
       <div className="capture-toggle" role="group" aria-label="Capture mode">
@@ -1025,8 +1354,8 @@ function LegacyApprovalInbox() {
     <section className="panel advisor-question-panel" aria-labelledby="advisor-question-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Legacy inbox</span>
-          <h2 id="advisor-question-heading">Approve what juniors captured</h2>
+          <span className="eyebrow">Approval inbox</span>
+          <h2 id="advisor-question-heading">Review captured notes</h2>
         </div>
       </div>
       {reward && <p className="approval-reward" role="status">{reward}</p>}
@@ -1054,7 +1383,7 @@ function LegacyApprovalInbox() {
               )}
               <div className="mini-stats">
                 <span>{item.seniorTech}</span>
-                <span>{approved[item.id] ? 'Approved into body of work' : item.status}</span>
+                <span>{approved[item.id] ? 'Approved' : item.status}</span>
                 <span>{approved[item.id] ? '+1 citation' : item.legacyEffect}</span>
               </div>
               <div className="approval-actions">
@@ -1078,7 +1407,7 @@ function LegacyApprovalInbox() {
                 </button>
               </div>
             </div>
-            <StatusPill tone={approved[item.id] ? 'green' : 'amber'}>{approved[item.id] ? 'Body of work' : 'Review'}</StatusPill>
+            <StatusPill tone={approved[item.id] ? 'green' : 'amber'}>{approved[item.id] ? 'Approved' : 'Review'}</StatusPill>
           </article>
         ))}
       </div>
@@ -1091,8 +1420,8 @@ function RecruitQueue() {
     <section className="panel recruit-panel" aria-labelledby="recruit-queue-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">People learning your methods</span>
-          <h2 id="recruit-queue-heading">Mentor lineage</h2>
+          <span className="eyebrow">Recruits</span>
+          <h2 id="recruit-queue-heading">Assigned recruits</h2>
         </div>
       </div>
       <div className="recruit-table">
@@ -1157,21 +1486,31 @@ function AdminView({ steps }) {
   return (
     <>
       <PageHeader
-        eyebrow="Leadership"
-        title="Recognize the people whose methods carry the floor"
+        eyebrow="Operations"
+        title="Vault and build status"
       >
         <div className="header-metrics">
           <Metric value="47" label="Top citations" detail="R. Thompson" />
-          <Metric value="23" label="Top mentor reach" detail="Technicians trained" />
-          <Metric value="3" label="Named techniques" detail="This quarter" />
+          <Metric value="23" label="Techs trained" detail="Top mentor reach" />
+          <Metric value="3" label="Methods" detail="This quarter" />
         </div>
       </PageHeader>
 
       <section className="admin-layout">
-        <LegacyRecognitionBoard />
-        <RetirementArtifactBoard />
-        <PendingLegacyBoard />
-        <ProjectStatusBoard steps={steps} />
+        <div className="admin-column admin-rail">
+          <SystemHealthBoard />
+          <AdminAdoptionBoard />
+          <AdvisorContributionBoard />
+          <PendingLegacyBoard />
+          <RepeatQuestionBoard />
+        </div>
+        <div className="admin-column admin-main">
+          <AdminRiskBoard />
+          <ProjectStatusBoard steps={steps} />
+          <VaultHealthBoard steps={steps} />
+          <LegacyRecognitionBoard />
+          <RetirementArtifactBoard />
+        </div>
       </section>
     </>
   );
@@ -1183,8 +1522,8 @@ function RetirementArtifactBoard() {
     <section className="panel retirement-panel" aria-labelledby="retirement-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Retirement artifact</span>
-          <h2 id="retirement-heading">{record.name}'s Legacy Record</h2>
+          <span className="eyebrow">Retirement record</span>
+          <h2 id="retirement-heading">{record.name}</h2>
         </div>
       </div>
       <p className="retirement-headline">{record.headline}</p>
@@ -1203,8 +1542,8 @@ function PendingLegacyBoard() {
     <section className="panel pending-legacy-panel" aria-labelledby="pending-legacy-heading">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Approval gate</span>
-          <h2 id="pending-legacy-heading">Waiting to enter a body of work</h2>
+          <span className="eyebrow">Approval queue</span>
+          <h2 id="pending-legacy-heading">Pending captures</h2>
         </div>
       </div>
       <div className="draft-queue">
@@ -1233,7 +1572,7 @@ function LegacyRecognitionBoard() {
       <div className="section-heading">
         <div>
           <span className="eyebrow">Recognition</span>
-          <h2 id="legacy-recognition-heading">Impact that should be named out loud</h2>
+          <h2 id="legacy-recognition-heading">Recognition board</h2>
         </div>
       </div>
       <div className="recognition-grid">
@@ -1243,13 +1582,13 @@ function LegacyRecognitionBoard() {
       </div>
       <div className="recognition-actions" aria-label="Leadership recognition actions">
         <button type="button" onClick={() => setRecognitionAction('R. Thompson added to weekly recognition.')}>
-          Add to weekly recognition
+          Recognize
         </button>
         <button type="button" onClick={() => setRecognitionAction('Retirement artifact prepared for R. Thompson.')}>
-          Prepare retirement artifact
+          Prepare record
         </button>
         <button type="button" onClick={() => setRecognitionAction('Thompson Pressure-Ramp Method nominated for named technique review.')}>
-          Nominate named technique
+          Nominate method
         </button>
       </div>
       {recognitionAction && <p className="sent-state" role="status">{recognitionAction}</p>}
