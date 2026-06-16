@@ -28,7 +28,9 @@ import {
   procedure,
   recognitionLeaders,
   retirementRecords,
+  reusableModules,
   seniorCaptureDrafts,
+  stationMeta,
   systemHealth,
   technicianProfiles,
   technicianGuardrails,
@@ -160,6 +162,12 @@ function ProfileModal({ profile, onClose }) {
             <div className="legacy-section">
               <h3>People trained</h3>
               <ul>{profile.menteeLinks.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          )}
+          {profile.stationMastery?.length > 0 && (
+            <div className="legacy-section station-mastery-section">
+              <h3>Station mastery</h3>
+              <ul>{profile.stationMastery.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           )}
           <div className="legacy-section legacy-timeline">
@@ -308,14 +316,57 @@ function TechnicianView({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
       <section className="role-grid technician-grid">
         <div className="primary-stack">
           <CurrentStepCard step={activeStep} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
+          <ShiftHandoffStrip step={activeStep} />
           <ProcedurePath steps={steps} onAddNote={onAddNote} onAskExpert={onAskExpert} onSaveAnswerNote={onSaveAnswerNote} onOpenProfile={onOpenProfile} />
         </div>
         <aside className="assist-stack">
           <ConversationCaptureCard step={activeStep} />
           <StandingOnShoulders onOpenProfile={onOpenProfile} />
+          <ReusableModuleCard onOpenProfile={onOpenProfile} />
         </aside>
       </section>
     </>
+  );
+}
+
+function ShiftHandoffStrip({ step }) {
+  const station = stationMeta[step.station] || {};
+  const handoff = station.handoff || {
+    fromCrew: 'Crew A',
+    toCrew: 'Crew B',
+    note: 'Pressure hold is stable; verify gauge cert before release.',
+    leftAt: 'Current shift',
+  };
+  const [note, setNote] = useState(handoff.note);
+  const [saved, setSaved] = useState(false);
+
+  function saveHandoff(event) {
+    event.preventDefault();
+    if (!note.trim()) return;
+    setSaved(true);
+  }
+
+  return (
+    <section className="panel shift-handoff" aria-labelledby="handoff-heading">
+      <div>
+        <span className="eyebrow">{step.station} / Shift handoff</span>
+        <h2 id="handoff-heading">{handoff.fromCrew} to {handoff.toCrew}</h2>
+        <p>{handoff.note} <span>{handoff.leftAt}</span></p>
+      </div>
+      <form onSubmit={saveHandoff}>
+        <label className="sr-only" htmlFor="handoff-note">Leave handoff note</label>
+        <input
+          id="handoff-note"
+          value={note}
+          onChange={(event) => {
+            setNote(event.target.value);
+            setSaved(false);
+          }}
+          aria-label="Shift handoff note"
+        />
+        <button type="submit" disabled={!note.trim()}>{saved ? 'Saved' : 'Leave note'}</button>
+      </form>
+    </section>
   );
 }
 
@@ -407,6 +458,39 @@ function StandingOnShoulders({ onOpenProfile }) {
   );
 }
 
+function ReusableModuleCard({ onOpenProfile }) {
+  const [moduleUsage, setModuleUsage] = useState(reusableModules[0].reuseCount);
+  const [cited, setCited] = useState(false);
+  const module = reusableModules[0];
+
+  function citeModule() {
+    if (cited) return;
+    setModuleUsage((count) => count + 1);
+    setCited(true);
+  }
+
+  return (
+    <section className="panel module-card" aria-labelledby="module-heading">
+      <div className="section-heading compact-heading">
+        <div>
+          <span className="eyebrow">Reusable module</span>
+          <h2 id="module-heading">{module.name}</h2>
+        </div>
+        <Database size={20} aria-hidden="true" />
+      </div>
+      <p>Reused on {moduleUsage} builds / {module.customers.length} customers</p>
+      <div className="module-actions">
+        <button type="button" className="method-action method-primary" onClick={citeModule} disabled={cited}>
+          {cited ? 'Citation added' : 'Reuse module'}
+        </button>
+        <button type="button" className="method-action method-secondary" onClick={() => onOpenProfile?.(module.author)}>
+          {module.author}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const [evidenceSent, setEvidenceSent] = useState(false);
 
@@ -416,6 +500,7 @@ function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
         <div>
           <span className="eyebrow">Do this now</span>
           <h2 id="current-step-heading">Step {step.id}: {step.title}</h2>
+          <p className="station-line">Station: {step.station} / Master: {stationMeta[step.station]?.master}</p>
         </div>
         <StatusPill tone="blue">Active</StatusPill>
       </div>
@@ -461,6 +546,7 @@ function CurrentStepCard({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
 function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpenProfile }) {
   const [selectedStepId, setSelectedStepId] = useState(procedure.currentStep);
   const selectedStep = steps.find((step) => step.id === selectedStepId) || steps[0];
+  const activeStep = steps.find((step) => step.status === 'active') || selectedStep;
 
   return (
     <section className="panel" aria-labelledby="path-heading">
@@ -471,6 +557,7 @@ function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
         </div>
         <span className="step-count">Step {procedure.currentStep} of {procedure.totalSteps}</span>
       </div>
+      <StationPhaseContext step={activeStep} />
       <div className="path-list" aria-label="Procedure workflow steps">
         {steps.map((step) => (
           <button
@@ -485,9 +572,12 @@ function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
               {step.status === 'complete' ? <CheckCircle2 size={17} aria-hidden="true" /> : step.id}
             </div>
             <div>
-              <h3>{step.title}</h3>
+              <div className="path-title-row">
+                <h3>{step.title}</h3>
+                <span className="station-badge">{step.station}</span>
+              </div>
               <p>
-                {step.workstream} / {step.duration}
+                Phase: {step.workstream} / {step.duration}
                 {step.completedBy ? ` / built by ${step.completedBy}` : ''}
               </p>
             </div>
@@ -505,6 +595,27 @@ function ProcedurePath({ steps, onAddNote, onAskExpert, onSaveAnswerNote, onOpen
         onOpenProfile={onOpenProfile}
       />
     </section>
+  );
+}
+
+function StationPhaseContext({ step }) {
+  const station = stationMeta[step.station] || {};
+
+  return (
+    <div className="station-phase-context" aria-label="Active phase and station">
+      <div>
+        <span>Current phase</span>
+        <strong>{step.workstream}</strong>
+      </div>
+      <div>
+        <span>Active station</span>
+        <strong>{step.station}</strong>
+      </div>
+      <div>
+        <span>Station master</span>
+        <strong>{station.master || 'Unassigned'} / {station.citations || 0} citations</strong>
+      </div>
+    </div>
   );
 }
 
@@ -544,6 +655,14 @@ function StepDetailPanel({ step, onAddNote, onAskExpert, onSaveAnswerNote, onOpe
           <strong>Legacy references</strong>
           <ul>
             {step.vaultRefs.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+        <div>
+          <strong>Station</strong>
+          <ul>
+            <li>{step.station}</li>
+            <li>Master: {stationMeta[step.station]?.master || 'Unassigned'}</li>
+            <li>{stationMeta[step.station]?.citations || 0} citations here</li>
           </ul>
         </div>
       </div>

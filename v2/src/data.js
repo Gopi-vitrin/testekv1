@@ -22,6 +22,7 @@ export const technicianSteps = [
     id: 22,
     title: 'Verify manifold bracket torque pattern',
     workstream: 'Hydraulic',
+    station: 'Calibration',
     owner: 'M. Chen',
     status: 'complete',
     completedBy: 'M. Chen',
@@ -36,6 +37,7 @@ export const technicianSteps = [
     id: 23,
     title: 'Route hydraulic return circuit and label service ports',
     workstream: 'Hydraulic',
+    station: 'Hydraulic-Pneumatic',
     owner: 'M. Chen',
     status: 'complete',
     completedBy: 'J. Martinez',
@@ -60,6 +62,7 @@ export const technicianSteps = [
     id: 24,
     title: 'Pressure decay test at 150 percent rated pressure',
     workstream: 'Hydraulic',
+    station: 'Calibration',
     owner: 'M. Chen',
     status: 'active',
     duration: '75 min planned',
@@ -93,6 +96,7 @@ export const technicianSteps = [
     id: 25,
     title: 'Release electrical Zone B termination',
     workstream: 'Electrical',
+    station: 'Wiring-Panel',
     owner: 'K. Williams',
     status: 'blocked',
     duration: 'Waiting 6h',
@@ -120,6 +124,7 @@ export const technicianSteps = [
     id: 26,
     title: 'Notify controls team for PLC baseline load',
     workstream: 'Controls',
+    station: 'Controls-Software',
     owner: 'J. Patel',
     status: 'locked',
     duration: 'Next safe step',
@@ -148,6 +153,7 @@ export const technicianProfiles = [
     legacyLine: 'When R. Thompson retires, his pressure-ramp judgment stays in every build that cites his method.',
     signatureMethods: ['Thompson Pressure-Ramp Method', 'DAQ wiring hold discipline', 'Pre-FAT hydraulic leak triage'],
     menteeLinks: ['D. Okafor used Thompson Pressure-Ramp Method', 'A. Morgan trained on staged pressure holds', 'N. Shah confirmed relief-valve prevention cue'],
+    stationMastery: ['Master of Calibration / 47 citations here'],
   },
   {
     name: 'J. Martinez',
@@ -165,6 +171,7 @@ export const technicianProfiles = [
     legacyLine: 'Known for turning field catches into named methods junior technicians can reuse safely.',
     signatureMethods: ['Martinez Thermal-Settle Procedure', 'Return-line routing checks', 'Revision mismatch identification'],
     menteeLinks: ['D. Okafor used thermal-settle cue', 'A. Morgan reused return-line routing check'],
+    stationMastery: ['Master of Instrumentation / 18 citations here'],
   },
   {
     name: 'D. Okafor',
@@ -245,6 +252,52 @@ export const technicianProfiles = [
     buildsShaped: ['Navy HPU electrical bay', 'Controls checkout bench'],
     legacyLine: 'Keeps electrical holds visible before they become rework.',
     signatureMethods: ['ECO hold triage', 'Zone B termination checks', 'Signal/power separation'],
+  },
+];
+
+export const stationMeta = {
+  'Mechanical/Frame': { master: 'E. Falkowski', citations: 31 },
+  'Hydraulic-Pneumatic': { master: 'E. Falkowski', citations: 31 },
+  'Wiring-Panel': {
+    master: 'J. Martinez',
+    citations: 18,
+    handoff: {
+      fromCrew: 'Crew A',
+      toCrew: 'Crew B',
+      note: 'Torqued 14/20 manifold bolts; rest blocked on corrected DAQ schematic.',
+      leftAt: 'Jun 14, 2026 14:00',
+    },
+  },
+  Instrumentation: { master: 'J. Martinez', citations: 18 },
+  'Controls-Software': { master: 'K. Williams', citations: 16 },
+  Calibration: { master: 'R. Thompson', citations: 47 },
+  'FAT/Run-off': { master: 'S. Reyes', citations: 12 },
+  'Crating-Shipping': { master: 'M. Chen', citations: 22 },
+};
+
+export const crews = [
+  { id: 'crew-a', shift: '06:00-14:00', members: ['M. Chen', 'J. Martinez', 'A. Morgan'] },
+  { id: 'crew-b', shift: '14:00-22:00', members: ['K. Williams', 'D. Okafor', 'N. Shah'] },
+];
+
+export const reusableModules = [
+  {
+    id: 'MOD-TH-HPU',
+    name: 'Thompson Hydraulic Manifold Module',
+    author: 'R. Thompson',
+    reuseCount: 11,
+    builds: ['TSK-2024-051', 'Navy HPU test stand', 'Collins hydraulic cart'],
+    customers: ['U.S. Navy', 'Collins', 'Delta TechOps'],
+    station: 'Calibration',
+  },
+  {
+    id: 'MOD-JM-DAQ',
+    name: 'Martinez DAQ Rack Config',
+    author: 'J. Martinez',
+    reuseCount: 7,
+    builds: ['TSK-2024-051', '787 flight control rig'],
+    customers: ['Boeing', 'U.S. Navy'],
+    station: 'Instrumentation',
   },
 ];
 

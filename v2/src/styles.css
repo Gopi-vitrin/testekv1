@@ -604,6 +604,74 @@ h1 {
   line-height: 1.55;
 }
 
+.station-line {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.shift-handoff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: 14px;
+  align-items: end;
+  border-left: 4px solid var(--teal);
+}
+
+.shift-handoff h2 {
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.shift-handoff p {
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.shift-handoff p span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.shift-handoff form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.shift-handoff input {
+  min-height: 42px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
+.shift-handoff button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 9px 14px;
+  color: #fff;
+  background: var(--navy);
+  border: 1px solid var(--navy);
+  border-radius: 7px;
+  font-weight: 850;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.module-actions button {
+  white-space: nowrap;
+}
+
 .action-block {
   margin-top: 14px;
   padding: 14px;
@@ -678,6 +746,45 @@ button:disabled {
   font-weight: 800;
 }
 
+.station-phase-context {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.25fr;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 9px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.station-phase-context div {
+  min-width: 0;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid rgba(22, 50, 79, 0.08);
+  border-radius: 7px;
+}
+
+.station-phase-context span,
+.station-phase-context strong {
+  display: block;
+}
+
+.station-phase-context span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.station-phase-context strong {
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
 .path-list {
   display: grid;
   gap: 9px;
@@ -735,9 +842,30 @@ button:disabled {
   background: var(--teal-soft);
 }
 
+.path-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
 .path-step h3 {
   font-size: 14px;
   line-height: 1.25;
+}
+
+.station-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 4px 8px;
+  color: #0f5a49;
+  background: var(--teal-soft);
+  border: 1px solid rgba(35, 122, 110, 0.2);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1;
 }
 
 .path-step p {
@@ -778,7 +906,7 @@ button:disabled {
 
 .step-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-top: 12px;
 }
@@ -1082,6 +1210,25 @@ button:disabled {
 .legacy-timeline {
   background: #fffdf7;
   border-color: rgba(127, 67, 20, 0.24);
+}
+
+.station-mastery-section {
+  background: var(--teal-soft);
+  border-color: rgba(35, 122, 110, 0.24);
+}
+
+.module-card p {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .answer-box {
@@ -2095,11 +2242,16 @@ dd {
 
   .advisor-cards,
   .evidence-grid,
+  .station-phase-context,
   .step-detail-grid,
   .guardrail-grid,
   .named-technique-row,
   .risk-signal-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shift-handoff {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2136,8 +2288,13 @@ dd {
   .named-technique-row,
   .legacy-record-grid,
   .evidence-grid,
+  .station-phase-context,
   .step-detail-grid,
   .capture-toggle {
+    grid-template-columns: 1fr;
+  }
+
+  .shift-handoff form {
     grid-template-columns: 1fr;
   }
 
